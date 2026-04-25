@@ -2,10 +2,10 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
+use App\Document\User;
 use App\Form\RegistrationFormType;
 use App\Security\AppAuthAuthenticator;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class RegistrationController extends AbstractController
 {
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager): Response
+    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, DocumentManager $documentManager): Response
     {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
@@ -33,8 +33,8 @@ class RegistrationController extends AbstractController
             $chosenRole = $form->get('roleChoice')->getData();
             $user->setRoles([$chosenRole]);
 
-            $entityManager->persist($user);
-            $entityManager->flush();
+            $documentManager->persist($user);
+            $documentManager->flush();
 
             // do anything else you need here, like send an email
 

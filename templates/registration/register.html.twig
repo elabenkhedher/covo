@@ -1,20 +1,278 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Inscription — CovoISET{% endblock %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ asset('assets/style.css') }}">
+  <style>
+    body { display: flex; min-height: 100vh; }
+    .auth-left {
+      flex: 1;
+      background: linear-gradient(160deg, #0f2147 0%, var(--primary) 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 3rem; position: relative; overflow: hidden;
+    }
+    .auth-left::after {
+      content: '';
+      position: absolute;
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(249,115,22,0.18), transparent 70%);
+      bottom: -50px; left: -50px; border-radius: 50%;
+    }
+    .auth-left-content { position: relative; z-index: 1; text-align: center; max-width: 360px; }
+    .auth-left .logo { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 1.5rem; }
+    .auth-left .logo span { color: var(--accent); }
+    .auth-left .illustration { font-size: 5rem; margin-bottom: 1.5rem; }
+    .auth-left h2 { color: #fff; font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .auth-left p { color: rgba(255,255,255,0.6); font-size: 0.9rem; line-height: 1.7; }
+    .auth-right {
+      width: 520px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem; background: var(--bg); overflow-y: auto;
+    }
+    .auth-form-box { width: 100%; max-width: 440px; }
+    .auth-form-box h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .auth-form-box .subtitle { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+    .form-card { background: #fff; border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .role-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+    .role-option {
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .role-option:hover { border-color: var(--primary-light); }
+    .role-option.selected { border-color: var(--primary); background: #eff6ff; }
+    .role-option .role-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .role-option h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .role-option p { font-size: 0.78rem; color: var(--text-muted); }
+    .login-link { text-align: center; margin-top: 1.25rem; font-size: 0.9rem; color: var(--text-muted); }
+    .login-link a { color: var(--primary); font-weight: 600; }
+    .step-indicator { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .step-dot {
+      flex: 1; height: 4px; border-radius: 4px; background: var(--border); transition: background 0.3s;
+    }
+    .step-dot.active { background: var(--primary); }
+    .step-dot.done { background: var(--success); }
+    .section-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    @media(max-width:768px) { .auth-left { display: none; } .auth-right { width: 100%; } .form-row { grid-template-columns: 1fr; } }
+    .form-error ul { margin: 0; padding-left: 1.5rem; color: #dc3545; font-size: 0.85rem; }
+    .alert-danger { background: #f8d7da; color: #842029; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; }
+  </style>
+{% endblock %}
 
 {% block body %}
-    <h1>Register</h1>
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <div class="logo">Covo<span>ISET</span></div>
+      <div class="illustration">🎓</div>
+      <h2>Rejoignez la communauté !</h2>
+      <p>Créez votre compte et commencez à covoiturer avec vos camarades de l'ISET Kélibia.</p>
+    </div>
+  </div>
 
-    {{ form_errors(registrationForm) }}
+  <div class="auth-right">
+    <div class="auth-form-box">
+      <h2>Créer un compte</h2>
+      <p class="subtitle">Remplissez le formulaire pour commencer</p>
 
-    {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.email) }}
-        {{ form_row(registrationForm.roleChoice) }}
-        {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
-        }) }}
-        {{ form_row(registrationForm.agreeTerms) }}
+      {{ form_start(registrationForm, {'attr': {'class': 'form-card', 'id': 'register-form'}}) }}
+        
+        {% if not registrationForm.vars.valid %}
+            <div class="alert alert-danger">
+                {{ form_errors(registrationForm) }}
+            </div>
+        {% endif %}
 
-        <button type="submit" class="btn">Register</button>
-    {{ form_end(registrationForm) }}
+        <div class="step-indicator">
+          <div class="step-dot active" id="s1"></div>
+          <div class="step-dot" id="s2"></div>
+          <div class="step-dot" id="s3"></div>
+        </div>
+
+        <!-- Hidden inputs mapped to Symfony roleChoice -->
+        <div style="display:none;">
+            {{ form_widget(registrationForm.roleChoice, {'attr': {'id': 'symfony-role-choice'}}) }}
+        </div>
+
+        <!-- STEP 1 -->
+        <div id="step1">
+          <div class="section-label">Choisissez votre rôle</div>
+          <div class="role-choice">
+            <div class="role-option selected" id="role-passager" onclick="selectRole('ROLE_PASSAGER')">
+              <div class="role-icon">🧍</div>
+              <h4>Passager</h4>
+              <p>Je cherche des trajets et réserve des places</p>
+            </div>
+            <div class="role-option" id="role-conducteur" onclick="selectRole('ROLE_CONDUCTEUR')">
+              <div class="role-icon">🚗</div>
+              <h4>Conducteur</h4>
+              <p>Je propose mes trajets et transporte des passagers</p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-full" onclick="goStep(2)">Continuer →</button>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="step2" style="display:none">
+          <div class="section-label">Informations personnelles</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prénom</label>
+              <input type="text" class="form-control" id="prenom" placeholder="Ahmed" required>
+            </div>
+            <div class="form-group">
+              <label>Nom</label>
+              <input type="text" class="form-control" id="nom" placeholder="Ben Ali" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Adresse email</label>
+            {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control', 'placeholder': 'ahmed@iset.tn', 'id': 'email'}}) }}
+            <div class="form-error">{{ form_errors(registrationForm.email) }}</div>
+          </div>
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input type="tel" class="form-control" id="tel" placeholder="+216 XX XXX XXX">
+          </div>
+
+          <div id="car-info-section" style="display:none; margin-top: 1rem;">
+            <div class="section-label">Informations sur le véhicule</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Marque & Modèle</label>
+                <input type="text" class="form-control" id="car-model" placeholder="Ex: Peugeot 208">
+              </div>
+              <div class="form-group">
+                <label>Immatriculation</label>
+                <input type="text" class="form-control" id="car-plate" placeholder="123 TN 4567">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Couleur</label>
+                <input type="text" class="form-control" id="car-color" placeholder="Ex: Blanc">
+              </div>
+              <div class="form-group">
+                <label>Places disponibles</label>
+                <input type="number" class="form-control" id="car-seats" placeholder="4" min="1" max="8">
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+            <button type="button" class="btn btn-outline" onclick="goStep(1)">← Retour</button>
+            <button type="button" class="btn btn-primary" style="flex:1" onclick="goStep(3)">Continuer →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div id="step3" style="display:none">
+          <div class="section-label">Sécurité du compte</div>
+          <div class="form-group">
+            <label>Mot de passe</label>
+            {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'form-control', 'placeholder': 'Minimum 8 caractères', 'id': 'password'}}) }}
+            <div class="form-error">{{ form_errors(registrationForm.plainPassword) }}</div>
+          </div>
+          <div class="form-group">
+            <label>Confirmer le mot de passe</label>
+            <input type="password" class="form-control" id="password2" placeholder="Répétez le mot de passe" required>
+            <div class="form-error"></div>
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-start;gap:0.6rem;">
+            {{ form_widget(registrationForm.agreeTerms, {'id': 'terms', 'attr': {'style': 'margin-top:4px;'}}) }}
+            <label for="terms" style="font-size:0.85rem;color:var(--text-muted);">
+              J'accepte les <a href="#" style="color:var(--primary)">conditions d'utilisation</a> et la politique de confidentialité
+            </label>
+            <div class="form-error">{{ form_errors(registrationForm.agreeTerms) }}</div>
+          </div>
+          <div style="display:flex;gap:0.75rem;">
+            <button type="button" class="btn btn-outline" onclick="goStep(2)">← Retour</button>
+            <button type="button" class="btn btn-accent" style="flex:1" onclick="handleRegister()">Créer mon compte ✓</button>
+          </div>
+        </div>
+
+        <div class="login-link" style="margin-top:1.25rem;">
+          Déjà inscrit ? <a href="{{ path('app_login') }}">Se connecter</a>
+        </div>
+      {{ form_end(registrationForm) }}
+
+      <div style="text-align:center;margin-top:1.5rem;">
+        <a href="{{ path('app_home') }}" style="color:var(--text-muted);font-size:0.88rem;">← Retour à l'accueil</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+{% endblock %}
+
+{% block javascripts %}
+  {{ parent() }}
+  <script src="{{ asset('assets/app.js') }}"></script>
+  <script>
+    let selectedRole = 'ROLE_PASSAGER';
+
+    // Synchroniser la sélection visuelle avec les inputs radio Symfony
+    function selectRole(r) {
+      selectedRole = r;
+      document.getElementById('role-passager').classList.toggle('selected', r === 'ROLE_PASSAGER');
+      document.getElementById('role-conducteur').classList.toggle('selected', r === 'ROLE_CONDUCTEUR');
+      
+      const inputs = document.querySelectorAll('input[type="radio"][name="registration_form[roleChoice]"]');
+      inputs.forEach(input => {
+          if (input.value === r) {
+              input.checked = true;
+          }
+      });
+    }
+
+    // Cocher par défaut au chargement
+    document.addEventListener("DOMContentLoaded", () => {
+        selectRole('ROLE_PASSAGER');
+    });
+
+    function goStep(n) {
+      if (n === 2) {
+        document.getElementById('car-info-section').style.display = selectedRole === 'ROLE_CONDUCTEUR' ? 'block' : 'none';
+      }
+      [1,2,3].forEach(i => {
+        document.getElementById('step'+i).style.display = i === n ? 'block' : 'none';
+        const dot = document.getElementById('s'+i);
+        dot.classList.toggle('active', i === n);
+        dot.classList.toggle('done', i < n);
+      });
+    }
+
+    function handleRegister() {
+      const p1 = document.getElementById('password').value;
+      const p2 = document.getElementById('password2').value;
+      const terms = document.getElementById('registration_form_agreeTerms') || document.getElementById('terms');
+      
+      if (p1 !== p2) { 
+        showToast('Les mots de passe ne correspondent pas.', 'error'); 
+        return; 
+      }
+      if (!terms.checked) { 
+        showToast('Veuillez accepter les conditions.', 'warning'); 
+        return; 
+      }
+      
+      // Submit the Symfony form natively
+      document.getElementById('register-form').submit();
+    }
+  </script>
 {% endblock %}
