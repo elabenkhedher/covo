@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rechercher un trajet — CovoISET</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .search-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #0f2147 100%);
+      padding: 2.5rem 2rem;
+    }
+    .search-hero h1 { color: #fff; font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .search-hero p { color: rgba(255,255,255,0.6); }
+    .search-bar-wrapper {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .search-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr) auto;
+      gap: 1rem;
+      align-items: end;
+    }
+    .filter-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .filter-tag {
+      background: #eff6ff;
+      color: var(--primary);
+      border: 1px solid #bfdbfe;
+      border-radius: 50px;
+      padding: 0.3rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .filter-tag:hover { background: var(--primary); color: #fff; }
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 2rem 0.75rem;
+    }
+    .results-header h3 { font-size: 1.1rem; }
+    .results-header .count { color: var(--text-muted); font-size: 0.9rem; }
+    .sort-select {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      background: #fff;
+      cursor: pointer;
+    }
+    .results-list { padding: 0 2rem 2rem; }
+    @media(max-width:700px) { .search-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">Covo<span>ISET</span></div>
+      <div class="sidebar-user">
+        <div class="user-avatar">AB</div>
+        <div class="user-info"><div class="name">Ahmed Ben Ali</div><div class="role">🧍 Passager</div></div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="passager-dashboard.html"><span class="icon">🏠</span> Tableau de bord</a>
+        <a href="search.html" class="active"><span class="icon">🔍</span> Rechercher un trajet</a>
+        <a href="mes-reservations.html"><span class="icon">📋</span> Mes réservations</a>
+        <a href="tracking-passager.html"><span class="icon">📍</span> Suivi GPS</a>
+        <div class="nav-section">Compte</div>
+        <a href="profil-passager.html"><span class="icon">👤</span> Mon profil</a>
+        <a href="notation-passager.html"><span class="icon">⭐</span> Mes évaluations</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="index.html">🏠 Accueil</a>
+        <a href="login.html">🚪 Déconnexion</a>
+      </div>
+    </aside>
+
+    <main class="main-content" style="padding:0;">
+      <!-- TOP BAR -->
+      <div style="padding:1rem 2rem;display:flex;align-items:center;gap:1rem;background:#fff;border-bottom:1px solid var(--border);">
+        <div id="hamburger" class="hamburger"><span></span><span></span><span></span></div>
+        <span style="font-weight:600;color:var(--text-muted);font-size:0.95rem;">Recherche de trajets</span>
+      </div>
+
+      <!-- SEARCH HERO -->
+      <div class="search-hero">
+        <h1>🔍 Trouvez votre trajet</h1>
+        <p>Recherchez parmi les trajets disponibles</p>
+        <div class="search-bar-wrapper">
+          <div class="search-grid">
+            <div class="form-group" style="margin:0">
+              <label>Départ</label>
+              <input type="text" class="form-control" id="from" placeholder="Tunis" value="Tunis">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Arrivée</label>
+              <input type="text" class="form-control" id="to" placeholder="Kélibia" value="Kélibia">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Date</label>
+              <input type="date" class="form-control" id="date">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Places min.</label>
+              <select class="form-control">
+                <option>1 place</option>
+                <option>2 places</option>
+                <option>3 places</option>
+              </select>
+            </div>
+            <button class="btn btn-accent" onclick="doSearch()">Rechercher</button>
+          </div>
+          <div class="filter-tags">
+            <div class="filter-tag">🕐 Ce matin</div>
+            <div class="filter-tag">🌅 Cet après-midi</div>
+            <div class="filter-tag">💰 Moins de 10 DT</div>
+            <div class="filter-tag">⭐ Note +4.5</div>
+            <div class="filter-tag">🚭 Non-fumeur</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="results-header">
+        <div>
+          <h3>Résultats de recherche</h3>
+          <span class="count">4 trajets disponibles</span>
+        </div>
+        <select class="sort-select">
+          <option>Trier par : Départ</option>
+          <option>Prix croissant</option>
+          <option>Prix décroissant</option>
+          <option>Mieux notés</option>
+        </select>
+      </div>
+
+      <div class="results-list">
+        <!-- Card 1 -->
+        <div class="trajet-card" onclick="window.location='detail-trajet.html'" style="cursor:pointer">
+          <div class="trajet-route">
+            <div class="cities">Tunis <span class="arrow">→</span> Kélibia</div>
+            <div class="trajet-meta">
+              <span>📅 Lun. 25 Avr · 07:30</span>
+              <span>🪑 3 places dispo</span>
+              <span>⏱ ~2h30</span>
+            </div>
+          </div>
+          <div class="trajet-driver">
+            <div class="driver-avatar">SK</div>
+            <div>
+              <div class="driver-name">Sami K.</div>
+              <div class="driver-rating">★★★★★ 4.9</div>
+            </div>
+          </div>
+          <div class="trajet-price">12 DT</div>
+          <a href="detail-trajet.html" class="btn btn-accent btn-sm" onclick="e=>e.stopPropagation()">Réserver</a>
+        </div>
+
+        <div class="trajet-card" onclick="window.location='detail-trajet.html'" style="cursor:pointer">
+          <div class="trajet-route">
+            <div class="cities">Tunis <span class="arrow">→</span> Kélibia</div>
+            <div class="trajet-meta">
+              <span>📅 Lun. 25 Avr · 08:00</span>
+              <span>🪑 2 places dispo</span>
+              <span>⏱ ~2h45</span>
+            </div>
+          </div>
+          <div class="trajet-driver">
+            <div class="driver-avatar">MH</div>
+            <div>
+              <div class="driver-name">Mohamed H.</div>
+              <div class="driver-rating">★★★★☆ 4.6</div>
+            </div>
+          </div>
+          <div class="trajet-price">10 DT</div>
+          <a href="detail-trajet.html" class="btn btn-accent btn-sm">Réserver</a>
+        </div>
+
+        <div class="trajet-card" onclick="window.location='detail-trajet.html'" style="cursor:pointer">
+          <div class="trajet-route">
+            <div class="cities">Nabeul <span class="arrow">→</span> Kélibia</div>
+            <div class="trajet-meta">
+              <span>📅 Lun. 25 Avr · 09:00</span>
+              <span>🪑 4 places dispo</span>
+              <span>⏱ ~1h</span>
+            </div>
+          </div>
+          <div class="trajet-driver">
+            <div class="driver-avatar">RB</div>
+            <div>
+              <div class="driver-name">Rana B.</div>
+              <div class="driver-rating">★★★★★ 5.0</div>
+            </div>
+          </div>
+          <div class="trajet-price">5 DT</div>
+          <a href="detail-trajet.html" class="btn btn-accent btn-sm">Réserver</a>
+        </div>
+
+        <div class="trajet-card" style="opacity:0.6;">
+          <div class="trajet-route">
+            <div class="cities">Tunis <span class="arrow">→</span> Kélibia</div>
+            <div class="trajet-meta">
+              <span>📅 Lun. 25 Avr · 14:00</span>
+              <span>🪑 0 place dispo</span>
+            </div>
+          </div>
+          <div class="trajet-driver">
+            <div class="driver-avatar">OZ</div>
+            <div>
+              <div class="driver-name">Omar Z.</div>
+              <div class="driver-rating">★★★★☆ 4.4</div>
+            </div>
+          </div>
+          <div class="trajet-price">15 DT</div>
+          <button class="btn btn-sm" style="background:#e2e8f0;color:var(--text-muted);cursor:not-allowed">Complet</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container"></div>
+  <script src="app.js"></script>
+  <script>
+    function doSearch() { showToast('Recherche effectuée !', 'info'); }
+  </script>
+</body>
+</html>

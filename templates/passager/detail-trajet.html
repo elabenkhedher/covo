@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Détail du trajet — CovoISET</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .detail-layout { display: grid; grid-template-columns: 1fr 360px; gap: 1.5rem; }
+    @media(max-width:900px) { .detail-layout { grid-template-columns: 1fr; } }
+    .trajet-header {
+      background: linear-gradient(135deg, var(--primary), #0f2147);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .trajet-header .route { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .trajet-header .route .arrow-big { color: var(--accent); }
+    .trajet-header .meta { display: flex; gap: 1.5rem; color: rgba(255,255,255,0.75); font-size: 0.9rem; }
+    .info-section { background: #fff; border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+    .info-section h3 { font-size: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    .info-row { display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.9rem; }
+    .info-row .key { color: var(--text-muted); }
+    .info-row .val { font-weight: 500; }
+    .driver-profile { display: flex; align-items: center; gap: 1rem; }
+    .driver-big-avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 700;
+    }
+    .driver-details h4 { font-size: 1.1rem; margin-bottom: 0.2rem; }
+    .driver-details .stars-display { color: var(--warning); }
+    .vehicle-info { margin-top: 1rem; background: var(--bg); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.88rem; }
+    .prefs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .pref-tag { background: #f1f5f9; border-radius: 50px; padding: 0.3rem 0.75rem; font-size: 0.8rem; }
+    .booking-card { background: #fff; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); position: sticky; top: 1rem; }
+    .price-big { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--accent); margin-bottom: 0.25rem; }
+    .price-note { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .seat-selector { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+    .seat-selector label { font-size: 0.88rem; color: var(--text-muted); }
+    .seat-selector select { flex: 1; padding: 0.6rem; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+    .total-line { display: flex; justify-content: space-between; padding: 0.75rem 0; border-top: 2px solid var(--border); margin-top: 0.5rem; }
+    .total-line .label { font-weight: 600; }
+    .total-line .amount { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">Covo<span>ISET</span></div>
+      <div class="sidebar-user">
+        <div class="user-avatar">AB</div>
+        <div class="user-info"><div class="name">Ahmed Ben Ali</div><div class="role">🧍 Passager</div></div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="passager-dashboard.html"><span class="icon">🏠</span> Tableau de bord</a>
+        <a href="search.html" class="active"><span class="icon">🔍</span> Rechercher un trajet</a>
+        <a href="mes-reservations.html"><span class="icon">📋</span> Mes réservations</a>
+        <a href="tracking-passager.html"><span class="icon">📍</span> Suivi GPS</a>
+        <a href="profil-passager.html"><span class="icon">👤</span> Mon profil</a>
+        <a href="notation-passager.html"><span class="icon">⭐</span> Mes évaluations</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="index.html">🏠 Accueil</a>
+        <a href="login.html">🚪 Déconnexion</a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+        <div id="hamburger" class="hamburger"><span></span><span></span><span></span></div>
+        <a href="search.html" style="color:var(--text-muted);font-size:0.9rem;">← Retour aux résultats</a>
+      </div>
+
+      <!-- HEADER -->
+      <div class="trajet-header">
+        <div class="route">Tunis <span class="arrow-big">→</span> Kélibia</div>
+        <div class="meta">
+          <span>📅 Lundi 25 Avr 2026</span>
+          <span>🕐 Départ 07:30</span>
+          <span>⏱ Durée ~2h30</span>
+          <span>🪑 3 places disponibles</span>
+        </div>
+      </div>
+
+      <div class="detail-layout">
+        <!-- LEFT -->
+        <div>
+          <!-- Conducteur -->
+          <div class="info-section">
+            <h3>👤 Conducteur</h3>
+            <div class="driver-profile">
+              <div class="driver-big-avatar">SK</div>
+              <div class="driver-details">
+                <h4>Sami Khaled</h4>
+                <div class="stars-display">★★★★★ 4.9 <span style="color:var(--text-muted);">(23 avis)</span></div>
+                <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem;">Membre depuis Jan. 2025 · 47 trajets</div>
+              </div>
+            </div>
+            <div class="vehicle-info">🚗 Volkswagen Golf · Bleu · TN 245 ABC</div>
+            <div class="prefs">
+              <span class="pref-tag">🚭 Non-fumeur</span>
+              <span class="pref-tag">🎵 Musique ok</span>
+              <span class="pref-tag">💬 Bavard</span>
+            </div>
+          </div>
+
+          <!-- Détails trajet -->
+          <div class="info-section">
+            <h3>🗺️ Détails du trajet</h3>
+            <div class="info-row"><span class="key">Départ</span><span class="val">Tunis, Avenue Habib Bourguiba</span></div>
+            <div class="info-row"><span class="key">Arrivée</span><span class="val">Kélibia, Place Centrale</span></div>
+            <div class="info-row"><span class="key">Date</span><span class="val">Lundi 25 Avril 2026</span></div>
+            <div class="info-row"><span class="key">Heure de départ</span><span class="val">07:30</span></div>
+            <div class="info-row"><span class="key">Durée estimée</span><span class="val">~2h30</span></div>
+            <div class="info-row"><span class="key">Places totales</span><span class="val">4</span></div>
+            <div class="info-row"><span class="key">Places disponibles</span><span class="val" style="color:var(--success);font-weight:700;">3</span></div>
+          </div>
+
+          <!-- Avis -->
+          <div class="info-section">
+            <h3>⭐ Avis récents sur Sami</h3>
+            <div style="padding:0.75rem 0;border-bottom:1px solid var(--border);">
+              <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;">
+                <strong style="font-size:0.9rem;">Ines M.</strong>
+                <span style="color:var(--warning);">★★★★★</span>
+              </div>
+              <p style="font-size:0.85rem;color:var(--text-muted);">Conducteur très ponctuel et sympa, trajet très agréable !</p>
+            </div>
+            <div style="padding:0.75rem 0;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;">
+                <strong style="font-size:0.9rem;">Karim B.</strong>
+                <span style="color:var(--warning);">★★★★☆</span>
+              </div>
+              <p style="font-size:0.85rem;color:var(--text-muted);">Bonne expérience, voiture propre et confortable.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT - BOOKING -->
+        <div>
+          <div class="booking-card">
+            <div class="price-big">12 DT</div>
+            <div class="price-note">par personne · paiement sécurisé</div>
+
+            <div class="seat-selector">
+              <label>Nombre de places :</label>
+              <select id="seats" onchange="updateTotal()">
+                <option value="1">1 place</option>
+                <option value="2">2 places</option>
+                <option value="3">3 places</option>
+              </select>
+            </div>
+
+            <div class="info-row">
+              <span class="key">Prix unitaire</span>
+              <span class="val">12 DT</span>
+            </div>
+            <div class="info-row">
+              <span class="key">Frais de service</span>
+              <span class="val">1 DT</span>
+            </div>
+            <div class="total-line">
+              <span class="label">Total</span>
+              <span class="amount" id="total">13 DT</span>
+            </div>
+
+            <button class="btn btn-accent btn-full btn-lg" style="margin-top:1rem;" onclick="openModal('payModal')">
+              💳 Réserver et payer
+            </button>
+            <p style="text-align:center;font-size:0.78rem;color:var(--text-muted);margin-top:0.75rem;">
+              🔒 Paiement 100% sécurisé · Remboursement si annulation
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL PAIEMENT -->
+  <div class="modal-overlay" id="payModal">
+    <div class="modal" style="max-width:500px;">
+      <h3>💳 Paiement sécurisé</h3>
+      <p>Trajet Tunis → Kélibia · Lun. 25 Avr · 07:30</p>
+      <div class="form-group">
+        <label>Numéro de carte</label>
+        <input type="text" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="form-group">
+          <label>Date d'expiration</label>
+          <input type="text" class="form-control" placeholder="MM/AA">
+        </div>
+        <div class="form-group">
+          <label>CVV</label>
+          <input type="text" class="form-control" placeholder="123" maxlength="3">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nom sur la carte</label>
+        <input type="text" class="form-control" placeholder="Ahmed Ben Ali">
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.75rem;margin-bottom:1rem;font-size:0.88rem;color:#166534;">
+        ✅ Montant à débiter : <strong id="modalTotal">13 DT</strong>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('payModal')">Annuler</button>
+        <button class="btn btn-success" onclick="confirmPayment()">Confirmer le paiement</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+  <script src="app.js"></script>
+  <script>
+    function updateTotal() {
+      const seats = parseInt(document.getElementById('seats').value);
+      const total = seats * 12 + 1;
+      document.getElementById('total').textContent = total + ' DT';
+      document.getElementById('modalTotal').textContent = total + ' DT';
+    }
+    function confirmPayment() {
+      closeModal('payModal');
+      showToast('Réservation confirmée ! Vérifiez vos emails.', 'success');
+      setTimeout(() => window.location.href = 'mes-reservations.html', 2000);
+    }
+  </script>
+</body>
+</html>

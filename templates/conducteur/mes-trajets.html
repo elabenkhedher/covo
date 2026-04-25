@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes trajets publiés — CovoISET</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">Covo<span>ISET</span></div>
+      <div class="sidebar-user">
+        <div class="user-avatar">SK</div>
+        <div class="user-info"><div class="name">Sami Khaled</div><div class="role">🚗 Conducteur</div></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Navigation</div>
+        <a href="conducteur-dashboard.html"><span class="icon">🏠</span> Tableau de bord</a>
+        <a href="publier-trajet.html"><span class="icon">➕</span> Publier un trajet</a>
+        <a href="mes-trajets.html" class="active"><span class="icon">🚗</span> Mes trajets</a>
+        <a href="tracking-conducteur.html"><span class="icon">📍</span> GPS en direct</a>
+        <div class="nav-section">Compte</div>
+        <a href="profile.html"><span class="icon">👤</span> Mon profil</a>
+        <a href="notation-conducteur.html"><span class="icon">⭐</span> Mes évaluations</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="index.html">🏠 Accueil</a>
+        <a href="login.html">🚪 Déconnexion</a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+        <div id="hamburger" class="hamburger"><span></span><span></span><span></span></div>
+        <div>
+          <h1 style="font-size:1.5rem;">Mes trajets</h1>
+          <p style="color:var(--text-muted);font-size:0.9rem;">Historique et gestion de vos trajets publiés</p>
+        </div>
+      </div>
+
+      <!-- FILTER TABS -->
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="filterRes('tous',this)">Tous (3)</button>
+        <button class="btn btn-sm" style="background:#d1fae5;color:#065f46;" onclick="filterRes('actif',this)">Actifs (2)</button>
+        <button class="btn btn-sm" style="background:#f1f5f9;color:#475569;" onclick="filterRes('terminé',this)">Terminés (1)</button>
+        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;" onclick="filterRes('annulé',this)">Annulés (0)</button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-wrapper">
+        <table class="data-table" id="resTable">
+          <thead>
+            <tr>
+              <th>Trajet</th>
+              <th>Date</th>
+              <th>Places réservées</th>
+              <th>Prix unitaire</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-status="actif">
+              <td><strong>Tunis → Kélibia</strong></td>
+              <td>Lun. 25 Avr · 07:30</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                  <span style="font-weight:600;">3/4</span>
+                </div>
+              </td>
+              <td><strong>13 DT</strong></td>
+              <td><span class="badge badge-success">Actif</span></td>
+              <td>
+                <div class="table-actions">
+                  <a href="detail-trajet.html" class="btn btn-primary btn-sm">👁️ Voir</a>
+                  <button class="btn btn-danger btn-sm" onclick="openModal('cancelResModal')">Annuler</button>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="actif">
+              <td><strong>Kélibia → Tunis</strong></td>
+              <td>Ven. 29 Avr · 18:00</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                  <span style="font-weight:600;">1/3</span>
+                </div>
+              </td>
+              <td><strong>13 DT</strong></td>
+              <td><span class="badge badge-success">Actif</span></td>
+              <td>
+                <div class="table-actions">
+                  <a href="detail-trajet.html" class="btn btn-primary btn-sm">👁️ Voir</a>
+                  <button class="btn btn-danger btn-sm" onclick="openModal('cancelResModal')">Annuler</button>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="terminé">
+              <td><strong>Nabeul → Kélibia</strong></td>
+              <td>Mar. 12 Avr · 09:00</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                  <span style="font-weight:600;">2/2</span>
+                </div>
+              </td>
+              <td><strong>11 DT</strong></td>
+              <td><span class="badge badge-grey">Terminé</span></td>
+              <td>
+                <div class="table-actions">
+                  <a href="detail-trajet.html" class="btn btn-outline btn-sm">Détails</a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL ANNULATION -->
+  <div class="modal-overlay" id="cancelResModal">
+    <div class="modal">
+      <h3>Annuler le trajet</h3>
+      <p>Voulez-vous vraiment annuler ce trajet ? Les passagers inscrits seront automatiquement notifiés et remboursés.</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('cancelResModal')">Non, garder</button>
+        <button class="btn btn-danger" onclick="confirmCancelRes()">Oui, annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+  <script src="app.js"></script>
+  <script>
+    function filterRes(status, btn) {
+      document.querySelectorAll('.app-layout button').forEach(b => b.style.fontWeight = '');
+      btn.style.fontWeight = '700';
+      const rows = document.querySelectorAll('#resTable tbody tr');
+      rows.forEach(r => {
+        r.style.display = (status === 'tous' || r.dataset.status === status) ? '' : 'none';
+      });
+    }
+    function confirmCancelRes() {
+      closeModal('cancelResModal');
+      showToast('Trajet annulé avec succès. Passagers notifiés.', 'warning');
+    }
+  </script>
+</body>
+</html>
