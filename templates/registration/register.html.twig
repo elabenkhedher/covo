@@ -93,8 +93,18 @@
       {{ form_start(registrationForm, {'attr': {'class': 'form-card', 'id': 'register-form'}}) }}
         
         {% if not registrationForm.vars.valid %}
-            <div class="alert alert-danger">
-                {{ form_errors(registrationForm) }}
+            <div class="alert alert-danger" style="margin-bottom: 1.5rem;">
+                <strong>Le formulaire contient des erreurs :</strong>
+                <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                    {% for error in registrationForm.vars.errors %}
+                        <li>{{ error.message }}</li>
+                    {% endfor %}
+                    {% for child in registrationForm.children %}
+                        {% for error in child.vars.errors %}
+                            <li><strong>{{ child.vars.label|default(child.vars.name|capitalize) }}</strong> : {{ error.message }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
             </div>
         {% endif %}
 
@@ -202,7 +212,7 @@
           </div>
           <div style="display:flex;gap:0.75rem;">
             <button type="button" class="btn btn-outline" onclick="goStep(2)">← Retour</button>
-            <button type="button" class="btn btn-accent" style="flex:1" onclick="handleRegister()">Créer mon compte ✓</button>
+            <button type="button" class="btn btn-accent" style="flex:1" onclick="handleRegister(event)">Créer mon compte ✓</button>
           </div>
         </div>
 
@@ -257,22 +267,34 @@
       });
     }
 
-    function handleRegister() {
-      const p1 = document.getElementById('password').value;
-      const p2 = document.getElementById('password2').value;
-      const terms = document.getElementById('registration_form_agreeTerms') || document.getElementById('terms');
+    function handleRegister(event) {
+      if (event) event.preventDefault();
       
-      if (p1 !== p2) { 
-        showToast('Les mots de passe ne correspondent pas.', 'error'); 
-        return; 
+      try {
+          const form = document.getElementById('register-form') || document.querySelector('form');
+          
+          const p1Input = document.getElementById('password') || document.querySelector('[name="registration_form[plainPassword]"]');
+          const p1 = p1Input ? p1Input.value : '';
+          
+          const p2Input = document.getElementById('password2');
+          const p2 = p2Input ? p2Input.value : '';
+          
+          const terms = document.getElementById('terms') || document.querySelector('[name="registration_form[agreeTerms]"]');
+          
+          if (p1 !== p2) { 
+            showToast('Les mots de passe ne correspondent pas.', 'error'); 
+            return; 
+          }
+          if (!terms || !terms.checked) { 
+            showToast('Veuillez accepter les conditions.', 'warning'); 
+            return; 
+          }
+          
+          // Force form submission safely
+          HTMLFormElement.prototype.submit.call(form);
+      } catch (e) {
+          alert('Erreur technique: ' + e.message);
       }
-      if (!terms.checked) { 
-        showToast('Veuillez accepter les conditions.', 'warning'); 
-        return; 
-      }
-      
-      // Submit the Symfony form natively
-      document.getElementById('register-form').submit();
     }
   </script>
 {% endblock %}

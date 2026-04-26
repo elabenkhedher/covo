@@ -7,9 +7,7 @@ security:
     providers:
         # used to reload user from session & other features (e.g. switch_user)
         app_user_provider:
-            mongodb:
-                class: App\Document\User
-                property: email
+            id: App\Security\MongoDBUserProvider
 
     firewalls:
         dev:
@@ -39,7 +37,7 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
-    # Note: Only the *first* matching rule is applied
+    # Note: Only the first matching rule is applied
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
