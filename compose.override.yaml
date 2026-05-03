@@ -22,3 +22,9 @@ services:
     ports:
       - "27017"
 ###< doctrine/mongodb-odm-bundle ###
+
+###> symfony/mercure-bundle ###
+  mercure:
+    ports:
+      - "80"
+###< symfony/mercure-bundle ###

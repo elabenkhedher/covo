@@ -1,0 +1,13 @@
+{
+    auto_https off
+}
+
+:3000 {
+    mercure {
+        publisher_jwt b6ab11d1082025c62fe52bc27ba0c56dd01daafd666a29936ed9bd778306bf37
+        subscriber_jwt b6ab11d1082025c62fe52bc27ba0c56dd01daafd666a29936ed9bd778306bf37
+        anonymous
+        cors_origins *
+    }
+    respond /healthz 200
+}
