@@ -16,15 +16,19 @@
       <div class="sidebar-logo">Covo<span>ISET</span></div>
       <div class="sidebar-user">
         <div class="user-avatar">
-          {{ m.avatar(app.user.initials|default('??'), 'md', 'accent') }}
+          {{ m.avatar(app.user.initials|default('?'), 'md', 'accent') }}
         </div>
         <div class="user-info">
-          <div class="name">{{ app.user.fullName|default('Utilisateur') }}</div>
+          <div class="name">{{ app.user.fullName|default('Visiteur') }}</div>
           <div class="role">
-            {% if app.user.roles|filter(r => r == 'ROLE_CONDUCTEUR')|length > 0 %}
-              🚗 Conducteur
+            {% if app.user %}
+              {% if 'ROLE_CONDUCTEUR' in app.user.roles %}
+                🚗 Conducteur
+              {% else %}
+                🧍 Passager
+              {% endif %}
             {% else %}
-              🧍 Passager
+              🌐 Non connecté
             {% endif %}
           </div>
         </div>
@@ -34,30 +38,41 @@
         {% block sidebar_nav %}{% endblock %}
 
         <div class="nav-section">Compte</div>
-        {% if app.user.roles|filter(r => r == 'ROLE_CONDUCTEUR')|length > 0 %}
-          <a href="{{ path('conducteur_profile') }}"
-             class="{{ app.request.attributes.get('_route') == 'conducteur_profile' ? 'active' : '' }}">
-            <span class="icon">👤</span> Mon profil
-          </a>
-          <a href="{{ path('conducteur_notation') }}"
-             class="{{ app.request.attributes.get('_route') == 'conducteur_notation' ? 'active' : '' }}">
-            <span class="icon">⭐</span> Mes évaluations
-          </a>
+        {% if app.user %}
+          {% if 'ROLE_CONDUCTEUR' in app.user.roles %}
+            <a href="{{ path('conducteur_profile') }}"
+               class="{{ app.request.attributes.get('_route') == 'conducteur_profile' ? 'active' : '' }}">
+              <span class="icon">👤</span> Mon profil
+            </a>
+            <a href="{{ path('conducteur_notation') }}"
+               class="{{ app.request.attributes.get('_route') == 'conducteur_notation' ? 'active' : '' }}">
+              <span class="icon">⭐</span> Mes évaluations
+            </a>
+          {% else %}
+            <a href="{{ path('passager_profile') }}"
+               class="{{ app.request.attributes.get('_route') == 'passager_profile' ? 'active' : '' }}">
+              <span class="icon">👤</span> Mon profil
+            </a>
+            <a href="{{ path('passager_notation') }}"
+               class="{{ app.request.attributes.get('_route') == 'passager_notation' ? 'active' : '' }}">
+              <span class="icon">⭐</span> Mes évaluations
+            </a>
+          {% endif %}
         {% else %}
-          <a href="{{ path('passager_profile') }}"
-             class="{{ app.request.attributes.get('_route') == 'passager_profile' ? 'active' : '' }}">
-            <span class="icon">👤</span> Mon profil
+          <a href="{{ path('app_login') }}">
+            <span class="icon">🔑</span> Connexion
           </a>
-          <a href="{{ path('passager_notation') }}"
-             class="{{ app.request.attributes.get('_route') == 'passager_notation' ? 'active' : '' }}">
-            <span class="icon">⭐</span> Mes évaluations
+          <a href="{{ path('app_register') }}">
+            <span class="icon">📝</span> Inscription
           </a>
         {% endif %}
       </nav>
 
       <div class="sidebar-footer">
         <a href="{{ path('app_home') }}">🏠 Accueil</a>
-        <a href="{{ path('app_logout') }}">🚪 Déconnexion</a>
+        {% if app.user %}
+          <a href="{{ path('app_logout') }}">🚪 Déconnexion</a>
+        {% endif %}
       </div>
     </aside>
 

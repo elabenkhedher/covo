@@ -66,6 +66,46 @@
     </div>
   </div>
 
+  {# ===== À NOTER ===== #}
+  {% if a_noter|length > 0 %}
+    <div style="margin-bottom:2rem;">
+      <h3 style="font-size:1.1rem;margin-bottom:1rem;">⭐ Passagers à noter</h3>
+      {% for item in a_noter %}
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+              <div>
+                <strong>{{ item.trajet.villeDepart }} → {{ item.trajet.villeArrivee }}</strong>
+                <div style="color:var(--text-muted);font-size:0.85rem;">
+                  📅 {{ item.trajet.dateDepart|date('d M Y') }} ·
+                  Passager : {{ item.passager.prenom }} {{ item.passager.nom }}
+                </div>
+              </div>
+            </div>
+            <form action="{{ path('conducteur_noter_passager', {reservationId: item.reservationId}) }}" method="POST">
+              <input type="hidden" name="_token" value="{{ csrf_token('noter_' ~ item.reservationId) }}">
+              <div style="margin-bottom:0.75rem;">
+                <label style="font-size:0.85rem;margin-bottom:0.35rem;display:block;">Note</label>
+                <div class="star-input" id="stars-{{ item.reservationId }}" onclick="setNote(this, event)">
+                  {% for i in 1..5 %}
+                    <span data-val="{{ i }}" style="cursor:pointer;font-size:1.5rem;color:var(--border);">★</span>
+                  {% endfor %}
+                </div>
+                <input type="hidden" name="note" id="note-{{ item.reservationId }}" value="5">
+              </div>
+              <div class="form-group">
+                <label style="font-size:0.85rem;">Commentaire (optionnel)</label>
+                <textarea class="form-control" name="commentaire" rows="2"
+                          placeholder="Comment s'est passé le trajet avec ce passager ?"></textarea>
+              </div>
+              <button type="submit" class="btn btn-accent btn-sm">Envoyer l'avis</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
   {# ===== LISTE DES AVIS ===== #}
   <div class="review-list">
     {% for avis in avis %}
@@ -133,6 +173,21 @@
       setTimeout(() => {
         el.style.width = el.getAttribute('data-width');
       }, 100);
+    });
+
+    function setNote(container, event) {
+      const clicked = event.target.closest('span');
+      if (!clicked) return;
+      const val = parseInt(clicked.dataset.val);
+      const id = container.id.replace('stars-', '');
+      container.querySelectorAll('span').forEach((s, i) => {
+        s.style.color = (i < val) ? '#fbbf24' : 'var(--border)';
+      });
+      document.getElementById('note-' + id).value = val;
+    }
+    // Init all star inputs to show 5 stars active
+    document.querySelectorAll('.star-input').forEach(row => {
+      row.querySelectorAll('span').forEach(s => s.style.color = '#fbbf24');
     });
   </script>
 

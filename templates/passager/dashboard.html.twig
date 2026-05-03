@@ -4,6 +4,35 @@
 {% block title %}Tableau de bord — Passager{% endblock %}
 {% block page_title %}Bienvenue, {{ app.user.prenom }} 👋{% endblock %}
 
+{% block extra_css %}
+<style>
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+  .stat-card { background: #fff; padding: 1.5rem; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 1.2rem; }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+  .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+  .stat-icon.blue { background: #e0f2fe; color: #0284c7; }
+  .stat-icon.orange { background: #ffedd5; color: #ea580c; }
+  .stat-icon.green { background: #dcfce3; color: #16a34a; }
+  .stat-icon.yellow { background: #fef3c7; color: #d97706; }
+  .stat-label { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.2rem; font-weight: 500; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+  
+  .dashboard-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+  @media(max-width: 992px) { .dashboard-layout { grid-template-columns: 1fr; } }
+
+  .trajet-card { background: #fff; border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 1rem; transition: transform 0.2s, box-shadow 0.2s; }
+  .trajet-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.06); border-color: var(--primary); }
+  .trajet-route { flex: 1; }
+  .cities { font-weight: 700; color: var(--text); font-size: 1.1rem; margin-bottom: 0.25rem; }
+  .arrow { color: var(--primary); margin: 0 0.5rem; }
+  .trajet-meta { font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 1rem; }
+  .trajet-driver { display: flex; align-items: center; gap: 0.75rem; min-width: 150px; }
+  .driver-name { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+  .driver-rating { font-size: 0.75rem; color: #fbbf24; }
+  .trajet-price { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--accent); white-space: nowrap; }
+</style>
+{% endblock %}
+
 {% block sidebar_nav %}
   <a href="{{ path('passager_dashboard') }}"
      class="{{ app.request.attributes.get('_route') == 'passager_dashboard' ? 'active' : '' }}">
@@ -57,7 +86,7 @@
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;flex-wrap:wrap;">
+  <div class="dashboard-layout">
 
     {# ===== PROCHAINS TRAJETS ===== #}
     <div>
@@ -66,28 +95,30 @@
         <a href="{{ path('trajet_search') }}" class="btn btn-accent btn-sm">+ Trouver un trajet</a>
       </div>
 
-      {% for reservation in prochains_trajets %}
-        <div class="trajet-card">
+      {% for item in prochains_trajets %}
+        <div class="trajet-card" onclick="window.location='{{ path('trajet_detail', {id: item.trajet.id}) }}'" style="cursor:pointer;">
           <div class="trajet-route">
             <div class="cities">
-              {{ reservation.trajet.villeDepart }} <span class="arrow">→</span> {{ reservation.trajet.villeArrivee }}
+              {{ item.trajet.villeDepart }} <span class="arrow">→</span> {{ item.trajet.villeArrivee }}
             </div>
             <div class="trajet-meta">
-              <span>📅 {{ reservation.trajet.dateDepart|date('D. H:i') }}</span>
-              <span>🪑 {{ reservation.nbPlaces }} place(s) réservée(s)</span>
+              <span>📅 {{ item.trajet.dateDepart|date('D. H:i') }}</span>
+              <span>🪑 {{ item.nbPlaces }} place(s) réservée(s)</span>
             </div>
           </div>
           <div class="trajet-driver">
-            {{ m.avatar(reservation.trajet.conducteur.initials, 'md', 'primary') }}
-            <div>
-              <div class="driver-name">{{ reservation.trajet.conducteur.prenom }} {{ reservation.trajet.conducteur.nom[0] }}.</div>
-              <div class="driver-rating">
-                {{ m.stars(reservation.trajet.conducteur.noteMoyenne) }}
+            {% if item.conducteur %}
+              {{ m.avatar(item.conducteur.initials, 'md', 'primary') }}
+              <div>
+                <div class="driver-name">{{ item.conducteur.prenom }} {{ item.conducteur.nom|slice(0, 1) }}.</div>
+                <div class="driver-rating">
+                  {{ m.stars(item.conducteur.noteMoyenne) }}
+                </div>
               </div>
-            </div>
+            {% endif %}
           </div>
-          <div class="trajet-price">{{ reservation.trajet.prix }} DT</div>
-          {{ m.badge_statut_reservation(reservation.statut) }}
+          <div class="trajet-price">{{ item.trajet.prix }} DT</div>
+          {{ m.badge_statut_reservation(item.statut) }}
         </div>
       {% else %}
         <div class="card">
@@ -113,26 +144,55 @@
         <h2 style="font-size:1.2rem;">Trajets suggérés</h2>
       </div>
       {% for trajet in trajets_suggeres %}
-        <div class="card" style="margin-bottom:0.75rem;">
+        <div class="card" style="margin-bottom:0.75rem; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid var(--border);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)';">
           <div class="card-body" style="padding:1rem;">
             <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:0.3rem;">
-              {{ trajet.villeDepart }} → {{ trajet.villeArrivee }}
+              {{ trajet.villeDepart }} <span style="color:var(--primary); margin:0 0.25rem;">→</span> {{ trajet.villeArrivee }}
             </div>
             <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.6rem;">
-              📅 {{ trajet.dateDepart|date('D. d M') }} · {{ trajet.placesDisponibles }} places
+              📅 {{ trajet.dateDepart|date('D. d M') }} · 🪑 {{ trajet.placesDisponibles }} place(s)
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <span style="font-family:'Syne',sans-serif;font-weight:800;color:var(--accent);">
                 {{ trajet.prix }} DT
               </span>
-              <a href="{{ path('trajet_detail', {id: trajet.id}) }}" class="btn btn-primary btn-sm">Réserver</a>
+              <a href="{{ path('trajet_detail', {id: trajet.id}) }}" class="btn btn-outline btn-sm">Détails</a>
             </div>
           </div>
         </div>
       {% else %}
-        <p style="color:var(--text-muted);font-size:0.9rem;">Aucun trajet disponible en ce moment.</p>
+        <div style="text-align:center;padding:1.5rem;background:var(--bg);border-radius:var(--radius);color:var(--text-muted);font-size:0.85rem; border: 1px dashed var(--border);">
+          🚗 Aucun trajet disponible en ce moment.
+        </div>
       {% endfor %}
+      
+      <div class="page-header" style="margin:2rem 0 1rem;">
+        <h2 style="font-size:1.2rem;">Derniers avis</h2>
+      </div>
+      
+      <div class="avis-list">
+        {% for avis in derniers_avis %}
+          <div class="card" style="margin-bottom:0.75rem; transition: transform 0.2s; border-left: 3px solid #fbbf24;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+            <div class="card-body" style="padding:1rem;">
+              <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+                {{ m.avatar(avis.auteur.initials, 'sm', 'primary') }}
+                <div style="flex:1;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+                    <strong style="font-size:0.85rem;">{{ avis.auteur.prenom }}</strong>
+                    <span style="color:#fbbf24;font-size:0.75rem;">{{ m.stars(avis.note) }}</span>
+                  </div>
+                  <p style="font-size:0.8rem;color:var(--text-muted);margin:0;line-height:1.4;font-style:italic;">"{{ avis.commentaire|slice(0, 80) }}..."</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div style="text-align:center;padding:1.5rem;background:var(--bg);border-radius:var(--radius);color:var(--text-muted);font-size:0.85rem; border: 1px dashed var(--border);">
+            ⭐ Aucun avis pour le moment.
+          </div>
+        {% endfor %}
+      </div>
     </div>
-
+    
   </div>
 {% endblock %}

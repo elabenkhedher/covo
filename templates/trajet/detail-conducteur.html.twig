@@ -28,6 +28,9 @@
   .passenger-meta { font-size: 0.85rem; color: var(--text-muted); }
   
   .action-buttons { display: flex; flex-direction: column; gap: 0.75rem; }
+  .passenger-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--border); }
+  .passenger-item:last-child { border-bottom: none; }
+  .passenger-info { display: flex; align-items: center; gap: 1rem; }
 </style>
 {% endblock %}
 
@@ -80,10 +83,19 @@
               <div>
                 <div class="passenger-name">{{ item.user.prenom }} {{ item.user.nom }}</div>
                 <div class="passenger-meta">
-                  Réservation: {{ item.reservation.places }} place(s) · Statut: {{ m.badge(item.reservation.statut, 'info') }}
+                  Réservation: {{ item.reservation.nbPlaces }} place(s) · Statut: {{ m.badge_statut_reservation(item.reservation.statut) }}
                 </div>
               </div>
             </div>
+            {% if trajet.statut == 'termine' %}
+              {% if item.dejaNote %}
+                <span style="color:var(--success); font-size:0.85rem; font-weight:600;">✅ Évalué</span>
+              {% else %}
+                <a href="{{ path('conducteur_notation') }}" class="btn btn-sm" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">
+                  ⭐ Noter
+                </a>
+              {% endif %}
+            {% endif %}
           </div>
         {% else %}
           <div style="text-align: center; padding: 2rem; color: var(--text-muted);">

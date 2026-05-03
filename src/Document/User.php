@@ -56,6 +56,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[MongoDB\Field(type: 'string', nullable: true)]
     private ?string $bio = null;
 
+    /** Note moyenne reçue (calculée lors de chaque nouvelle notation) */
+    #[MongoDB\Field(type: 'float')]
+    private float $noteMoyenne = 0.0;
+
+    /** Nombre total de notations reçues (pour calculer la moyenne pondérée) */
+    #[MongoDB\Field(type: 'int')]
+    private int $nbNotations = 0;
+
     #[MongoDB\Field(type: 'bool')]
     private bool $prefNonFumeur = true;
 
@@ -167,6 +175,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function isPrefDiscussion(): bool { return $this->prefDiscussion; }
     public function setPrefDiscussion(bool $prefDiscussion): self { $this->prefDiscussion = $prefDiscussion; return $this; }
+
+    public function getNoteMoyenne(): float { return $this->noteMoyenne; }
+    public function setNoteMoyenne(float $noteMoyenne): self { $this->noteMoyenne = $noteMoyenne; return $this; }
+
+    public function getNbNotations(): int { return $this->nbNotations; }
+    public function setNbNotations(int $nbNotations): self { $this->nbNotations = $nbNotations; return $this; }
+
+    /**
+     * Met à jour la note moyenne de façon incrémentale.
+     */
+    public function ajouterNotation(float $nouvelleNote): void
+    {
+        $this->noteMoyenne = (($this->noteMoyenne * $this->nbNotations) + $nouvelleNote) / ($this->nbNotations + 1);
+        $this->nbNotations++;
+    }
 
     public function getFullName(): string
     {

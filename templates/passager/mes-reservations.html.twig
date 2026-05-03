@@ -86,9 +86,11 @@
                 {% elseif res.statut == 'en_attente' %}
                   <button class="btn btn-danger btn-sm"
                           onclick="openModal('cancelResModal-{{ res.id }}')">Annuler</button>
-                {% elseif res.statut == 'terminee' and not (res.reservation.noteDeposee|default(false)) %}
-                  <a href="{{ path('passager_noter_conducteur', {reservationId: res.id}) }}"
+                {% elseif res.statut == 'terminee' and not res.dejaNote %}
+                  <a href="{{ path('passager_notation') }}"
                      class="btn btn-sm" style="background:#fef3c7;color:#92400e;">⭐ Noter</a>
+                {% elseif res.dejaNote %}
+                  <span style="color:var(--success);font-size:0.85rem;">✅ Noté</span>
                 {% else %}
                   —
                 {% endif %}

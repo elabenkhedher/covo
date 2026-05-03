@@ -1,32 +1,44 @@
 {% extends 'app_base.html.twig' %}
 {% import '_macros.html.twig' as m %}
 
-{% block title %}Tableau de bord — Conducteur{% endblock %}
-{% block page_title %}Bonjour, {{ app.user.prenom }} 🚗{% endblock %}
-{% block page_subtitle %}Gérez vos trajets et revenus{% endblock %}
+{% block title %}Tableau de bord Conducteur{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+{% block page_subtitle %}Bienvenue, {{ app.user.prenom }} ! Voici l'état de votre activité.{% endblock %}
+
+{% block extra_css %}
+<style>
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+  .stat-card { background: #fff; padding: 1.5rem; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 1.2rem; }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+  .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+  .stat-icon.blue { background: #e0f2fe; color: #0284c7; }
+  .stat-icon.orange { background: #ffedd5; color: #ea580c; }
+  .stat-icon.green { background: #dcfce3; color: #16a34a; }
+  .stat-icon.yellow { background: #fef3c7; color: #d97706; }
+  .stat-label { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.2rem; font-weight: 500; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+  
+  .dashboard-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+  @media(max-width: 992px) { .dashboard-layout { grid-template-columns: 1fr; } }
+
+  .trajet-card { background: #fff; border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .trajet-route { flex: 1; }
+  .cities { font-weight: 700; color: var(--text); font-size: 1.1rem; margin-bottom: 0.25rem; }
+  .arrow { color: var(--primary); margin: 0 0.5rem; }
+  .trajet-meta { font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 1rem; }
+</style>
+{% endblock %}
 
 {% block sidebar_nav %}
   <div class="nav-section">Navigation</div>
-  <a href="{{ path('conducteur_dashboard') }}"
-     class="{{ app.request.attributes.get('_route') == 'conducteur_dashboard' ? 'active' : '' }}">
-    <span class="icon">🏠</span> Tableau de bord
-  </a>
-  <a href="{{ path('trajet_publier') }}"
-     class="{{ app.request.attributes.get('_route') == 'trajet_publier' ? 'active' : '' }}">
-    <span class="icon">➕</span> Publier un trajet
-  </a>
-  <a href="{{ path('trajet_mes_trajets') }}"
-     class="{{ app.request.attributes.get('_route') == 'trajet_mes_trajets' ? 'active' : '' }}">
-    <span class="icon">🚗</span> Mes trajets
-  </a>
-  <a href="{{ path('conducteur_tracking') }}"
-     class="{{ app.request.attributes.get('_route') == 'conducteur_tracking' ? 'active' : '' }}">
-    <span class="icon">📍</span> GPS en direct
-  </a>
+  <a href="{{ path('conducteur_dashboard') }}" class="active"><span class="icon">🏠</span> Tableau de bord</a>
+  <a href="{{ path('trajet_publier') }}"><span class="icon">➕</span> Publier un trajet</a>
+  <a href="{{ path('trajet_mes_trajets') }}"><span class="icon">🚗</span> Mes trajets</a>
+  <a href="{{ path('conducteur_tracking') }}"><span class="icon">📍</span> GPS en direct</a>
 {% endblock %}
 
 {% block body %}
-
+  
   {# ===== STATS ===== #}
   <div class="stats-grid">
     <div class="stat-card">
@@ -37,30 +49,32 @@
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon green">💰</div>
+      <div class="stat-icon orange">💰</div>
       <div>
-        <div class="stat-value">{{ stats.revenus_total }} DT</div>
+        <div class="stat-value" style="color:var(--success);">{{ stats.revenus_total }} DT</div>
         <div class="stat-label">Revenus totaux</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon orange">👥</div>
+      <div class="stat-icon green">👥</div>
       <div>
         <div class="stat-value">{{ stats.passagers_transportes }}</div>
         <div class="stat-label">Passagers transportés</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon blue">⭐</div>
+      <div class="stat-icon yellow">⭐</div>
       <div>
-        <div class="stat-value">{{ stats.note_moyenne }}</div>
+        <div class="stat-value" style="color:#fbbf24; display:flex; align-items:center; gap:0.5rem;">
+          {{ stats.note_moyenne|number_format(1) }} <span style="font-size:1.2rem;">★</span>
+        </div>
         <div class="stat-label">Note moyenne</div>
       </div>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
-
+  <div class="dashboard-layout">
+    
     {# ===== TRAJETS À VENIR ===== #}
     <div>
       <div class="page-header" style="margin-bottom:1rem;">
@@ -74,7 +88,7 @@
             <div class="cities">{{ trajet.villeDepart }} <span class="arrow">→</span> {{ trajet.villeArrivee }}</div>
             <div class="trajet-meta">
               <span>📅 {{ trajet.dateDepart|date('D. d M, H:i') }}</span>
-              <span>🪑 {{ trajet.placesReservees }}/{{ trajet.placesTotales }} places réservées</span>
+              <span>🪑 {{ (trajet.nbPlacesTotal - trajet.nbPlacesDisponibles) }}/{{ trajet.nbPlacesTotal }} places réservées</span>
             </div>
           </div>
           <div style="text-align:center;">
@@ -87,6 +101,7 @@
           {{ m.badge_statut_trajet(trajet.statut) }}
 
           <div class="table-actions">
+            <a href="{{ path('trajet_detail_conducteur', {id: trajet.id}) }}" class="btn btn-primary btn-sm">👁️ Voir</a>
             <a href="{{ path('trajet_modifier', {id: trajet.id}) }}" class="btn btn-outline btn-sm">Modifier</a>
             <button class="btn btn-danger btn-sm" onclick="openModal('cancelModal-{{ trajet.id }}')">Annuler</button>
           </div>
@@ -130,7 +145,7 @@
       <div class="page-header" style="margin-bottom:1rem;">
         <h2 style="font-size:1.2rem;">Revenus ce mois</h2>
       </div>
-      <div class="card">
+      <div class="card" style="transition: transform 0.2s, box-shadow 0.2s; border: 1px solid var(--border);">
         <div class="card-body">
           <div style="font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--accent);">
             {{ revenus_mois.total }} DT
@@ -138,38 +153,47 @@
           <div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">
             {{ "now"|date("F Y") }}
           </div>
-          <div style="background:var(--bg);border-radius:8px;padding:0.75rem;">
-            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem;">
-              <span>Trajets ce mois</span><strong>{{ revenus_mois.trajets }}</strong>
+          <div style="background:linear-gradient(to right, #f8fafc, #f1f5f9);border-radius:12px;padding:1rem;">
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.5rem;">
+              <span style="color:var(--text-muted);">Trajets ce mois</span><strong style="color:var(--text);">{{ revenus_mois.trajets }}</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.4rem;">
-              <span>Passagers</span><strong>{{ revenus_mois.passagers }}</strong>
+            <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.5rem;">
+              <span style="color:var(--text-muted);">Passagers</span><strong style="color:var(--text);">{{ revenus_mois.passagers }}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:0.85rem;">
-              <span>Taux de remplissage</span>
-              <strong style="color:var(--success);">{{ revenus_mois.taux_remplissage }}%</strong>
+              <span style="color:var(--text-muted);">Taux de remplissage</span><strong style="color:var(--text);">{{ revenus_mois.taux_remplissage }}%</strong>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card" style="margin-top:1rem;">
-        <div class="card-body">
-          <div style="font-size:0.88rem;font-weight:600;margin-bottom:0.75rem;">⭐ Derniers avis</div>
-          {% for avis in derniers_avis %}
-            <div style="font-size:0.82rem;color:var(--text-muted);padding:0.5rem 0;
-                        {% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
-              {{ m.stars(avis.note) }}
-              <div style="margin-top:0.25rem;">
-                "{{ avis.commentaire }}" — {{ avis.auteur.prenom }} {{ avis.auteur.nom[0] }}.
+      <div class="page-header" style="margin:2rem 0 1rem;">
+        <h2 style="font-size:1.2rem;">Derniers avis</h2>
+      </div>
+      
+      <div class="avis-list">
+        {% for avis in derniers_avis %}
+          <div class="card" style="margin-bottom:0.75rem; transition: transform 0.2s; border-left: 3px solid #fbbf24;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+            <div class="card-body" style="padding:1rem;">
+              <div style="display:flex;gap:0.75rem;align-items:flex-start;">
+                {{ m.avatar(avis.auteur.initials, 'sm', 'primary') }}
+                <div style="flex:1;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+                    <strong style="font-size:0.85rem;">{{ avis.auteur.prenom }}</strong>
+                    <span style="color:#fbbf24;font-size:0.75rem;">{{ m.stars(avis.note) }}</span>
+                  </div>
+                  <p style="font-size:0.8rem;color:var(--text-muted);margin:0;line-height:1.4;font-style:italic;">"{{ avis.commentaire|slice(0, 80) }}..."</p>
+                </div>
               </div>
             </div>
-          {% else %}
-            <p style="font-size:0.85rem;color:var(--text-muted);">Aucun avis pour l'instant.</p>
-          {% endfor %}
-        </div>
+          </div>
+        {% else %}
+          <div style="text-align:center;padding:1.5rem;background:var(--bg);border-radius:var(--radius);color:var(--text-muted);font-size:0.85rem; border: 1px dashed var(--border);">
+            ⭐ Aucun avis pour le moment.
+          </div>
+        {% endfor %}
       </div>
     </div>
-
+    
   </div>
 {% endblock %}

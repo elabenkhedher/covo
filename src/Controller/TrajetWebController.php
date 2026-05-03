@@ -160,7 +160,20 @@ class TrajetWebController extends AbstractController
         foreach ($reservations as $res) {
             $u = $this->dm->find(User::class, $res->getPassagerId());
             if ($u) {
-                $passagers[] = ['reservation' => $res, 'user' => $u];
+                // Vérifier si déjà noté par ce conducteur
+                $dejaNote = $this->dm->getRepository(\App\Document\Avis::class)
+                    ->findOneBy([
+                        'auteurId' => (string)$this->getUser()->getId(),
+                        'destinataireId' => (string)$u->getId(),
+                        'trajetId' => $id,
+                        'type' => 'conducteur_vers_passager'
+                    ]);
+
+                $passagers[] = [
+                    'reservation' => $res,
+                    'user' => $u,
+                    'dejaNote' => $dejaNote !== null
+                ];
             }
         }
 
