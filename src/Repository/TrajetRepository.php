@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Repository;
+
+use App\Document\Trajet;
+use Doctrine\Bundle\MongoDBBundle\ManagerRegistry;
+use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepository;
+
+/**
+ * @extends ServiceDocumentRepository<Trajet>
+ */
+class TrajetRepository extends ServiceDocumentRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Trajet::class);
+    }
+
+    /**
+     * Recherche multi-critères avec support géospatial.
+     *
+     * Filtres acceptés :
+     *   - villeDepart  (string)   → regex insensible à la casse
+     *   - villeArrivee (string)   → regex insensible à la casse
+     *   - date         (\DateTimeInterface) → jour exact
+     *   - nbPlaces     (int)      → nbPlacesDisponibles >= valeur
+     *   - prixMax      (float)    → prix <= valeur
+     *   - coordDepart  (array [lng, lat])
+     *   - rayon        (float, km) → recherche $near 2dsphere
+     *
+     * @return Trajet[]
+     */
+    public function findByFilters(array $filtres): array
+    {
+        $qb = $this->createQueryBuilder();
+
+        // Toujours : seulement les trajets actifs à venir
+        $qb->field('statut')->equals('actif');
+        $qb->field('dateDepart')->gte(new \DateTime('today'));
+
+        if (!empty($filtres['villeDepart'])) {
+            $qb->field('villeDepart')->equals(
+                new \MongoDB\BSON\Regex($filtres['villeDepart'], 'i')
+            );
+        }
+
+        if (!empty($filtres['villeArrivee'])) {
+            $qb->field('villeArrivee')->equals(
+                new \MongoDB\BSON\Regex($filtres['villeArrivee'], 'i')
+            );
+        }
+
+        if (!empty($filtres['date']) && $filtres['date'] instanceof \DateTimeInterface) {
+            $dateDebut = \DateTime::createFromInterface($filtres['date'])
+                ->setTime(0, 0, 0);
+            $dateFin   = (clone $dateDebut)->modify('+1 day');
+            $qb->field('dateDepart')->gte($dateDebut)->lt($dateFin);
+        }
+
+        if (isset($filtres['nbPlaces']) && $filtres['nbPlaces'] > 0) {
+            $qb->field('nbPlacesDisponibles')->gte((int) $filtres['nbPlaces']);
+        }
+
+        if (isset($filtres['prixMax']) && $filtres['prixMax'] >= 0) {
+            $qb->field('prix')->lte((float) $filtres['prixMax']);
+        }
+
+        // Recherche géospatiale $near avec index 2dsphere
+        if (!empty($filtres['coordDepart']) && !empty($filtres['rayon'])) {
+            [$lng, $lat] = $filtres['coordDepart'];
+            $rayonMetres  = (float) $filtres['rayon'] * 1000;
+
+            $qb->field('coordDepart')->geoNear((float) $lng, (float) $lat)
+               ->maxDistance($rayonMetres / 6378137); // radians pour $nearSphere
+            // Alternative via $near/$geoNear natif (voir findNearby())
+        }
+
+        $qb->sort('dateDepart', 'ASC');
+
+        return $qb->getQuery()->execute()->toArray();
+    }
+
+    /**
+     * Récupère tous les trajets d'un conducteur triés par date décroissante.
+     *
+     * @return Trajet[]
+     */
+    public function findByConducteur(string $conducteurId): array
+    {
+        return $this->createQueryBuilder()
+            ->field('conducteurId')->equals($conducteurId)
+            ->sort('dateDepart', 'DESC')
+            ->getQuery()
+            ->execute()
+            ->toArray();
+    }
+
+    /**
+     * Recherche géospatiale $near : trajets actifs proches d'un point donné.
+     *
+     * @return Trajet[]
+     */
+    public function findNearby(float $lng, float $lat, float $rayonKm): array
+    {
+        $rayonMetres = $rayonKm * 1000;
+
+        return $this->createQueryBuilder()
+            ->field('statut')->equals('actif')
+            ->field('dateDepart')->gte(new \DateTime('today'))
+            ->field('coordDepart')->near($lng, $lat)
+                ->maxDistance($rayonMetres / 6378137) // distance en radians
+            ->sort('dateDepart', 'ASC')
+            ->getQuery()
+            ->execute()
+            ->toArray();
+    }
+}

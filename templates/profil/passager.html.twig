@@ -1,0 +1,212 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}Mon profil — Passager{% endblock %}
+{% block page_title %}Mon espace{% endblock %}
+{% block page_subtitle %}Gérez votre profil et vos informations personnelles{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-layout { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; align-items: start; }
+  @media(max-width:900px) { .profile-layout { grid-template-columns: 1fr; } }
+  .profile-card { background: #fff; border-radius: var(--radius); padding: 2rem 1.5rem; box-shadow: var(--shadow); text-align: center; position: sticky; top: 90px; }
+  .profile-badges { display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+  .profile-nav { background: #fff; border-radius: var(--radius); padding: 0.5rem; box-shadow: var(--shadow); margin-top: 1rem; }
+  .profile-nav a { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+  .profile-nav a:hover, .profile-nav a.active { background: var(--bg); color: var(--primary); font-weight: 500; }
+  .form-section { background: #fff; border-radius: var(--radius); padding: 1.75rem; box-shadow: var(--shadow); margin-bottom: 1.25rem; }
+  .form-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media(max-width:600px) { .form-row-2 { grid-template-columns: 1fr; } }
+  .pref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .pref-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; }
+  .pref-item:hover { background: var(--bg); }
+  .danger-zone { background: #fff; border: 1.5px solid #fecaca; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
+  .danger-zone h3 { font-size: 1rem; font-weight: 700; color: var(--danger); margin-bottom: 0.75rem; }
+  .danger-zone p { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1rem; }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+  <a href="{{ path('passager_dashboard') }}"><span class="icon">🏠</span> Tableau de bord</a>
+  <a href="{{ path('trajet_search') }}"><span class="icon">🔍</span> Rechercher un trajet</a>
+  <a href="{{ path('passager_reservations') }}"><span class="icon">📋</span> Mes réservations</a>
+  <a href="{{ path('passager_tracking') }}"><span class="icon">📍</span> Suivi GPS</a>
+{% endblock %}
+
+{% block body %}
+  <div class="profile-layout">
+
+    {# ===== LEFT: CARD + NAV ===== #}
+    <div>
+      <div class="profile-card">
+        {{ m.avatar(app.user.initials, 'xl', 'primary') }}
+        <h2 style="font-size:1.2rem;margin-bottom:0.25rem;">{{ app.user.prenom }} {{ app.user.nom }}</h2>
+        <p style="color:var(--text-muted);font-size:0.88rem;">{{ app.user.email }}</p>
+        <div class="profile-badges">
+          <span class="badge badge-green">Vérifié ✓</span>
+          <span class="badge badge-orange">Passager</span>
+        </div>
+        <div style="margin-top:1rem;display:flex;justify-content:center;gap:2rem;font-size:0.85rem;">
+          <div>
+            <strong>{{ stats.nbTrajets|default(0) }}</strong>
+            <div style="color:var(--text-muted);">Trajets</div>
+          </div>
+          <div>
+            <strong>{{ stats.noteMoyenne|default(0) }}</strong>
+            <div style="color:var(--text-muted);">Note</div>
+          </div>
+          <div>
+            <strong>{{ stats.totalDepense|default(0) }} DT</strong>
+            <div style="color:var(--text-muted);">Dépensé</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-nav">
+        <a href="#info" class="active">👤 Informations</a>
+        <a href="#preferences">⚙️ Préférences</a>
+        <a href="#securite">🔒 Sécurité</a>
+        <a href="#danger">🗑️ Supprimer le compte</a>
+      </div>
+    </div>
+
+    {# ===== RIGHT: FORMS ===== #}
+    <div>
+      {{ form_start(profileForm) }}
+
+        {# INFORMATIONS PERSONNELLES #}
+        <div class="form-section" id="info">
+          <h3>👤 Informations personnelles</h3>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Prénom</label>
+              {{ form_widget(profileForm.prenom, { attr: { class: 'form-control' } }) }}
+              {{ form_errors(profileForm.prenom) }}
+            </div>
+            <div class="form-group">
+              <label>Nom</label>
+              {{ form_widget(profileForm.nom, { attr: { class: 'form-control' } }) }}
+              {{ form_errors(profileForm.nom) }}
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Adresse email</label>
+            {{ form_widget(profileForm.email, { attr: { class: 'form-control' } }) }}
+            {{ form_errors(profileForm.email) }}
+          </div>
+          <div class="form-group">
+            <label>Téléphone</label>
+            {{ form_widget(profileForm.telephone, { attr: { class: 'form-control', placeholder: '+216 XX XXX XXX' } }) }}
+          </div>
+          <div class="form-group">
+            <label>Bio (optionnel)</label>
+            {{ form_widget(profileForm.bio, {
+              attr: { class: 'form-control', rows: 3, placeholder: 'Dites quelques mots sur vous…' }
+            }) }}
+          </div>
+        </div>
+
+        {# PRÉFÉRENCES DE VOYAGE #}
+        <div class="form-section" id="preferences">
+          <h3>⚙️ Préférences de voyage</h3>
+          <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:1rem;">
+            Ces préférences seront visibles par les conducteurs lors de votre réservation.
+          </p>
+          <div class="pref-grid">
+            <label class="pref-item">
+              {{ form_widget(profileForm.prefNonFumeur) }} 🚭 Non-fumeur
+            </label>
+            <label class="pref-item">
+              {{ form_widget(profileForm.prefMusique) }} 🎵 J'aime la musique
+            </label>
+            <label class="pref-item">
+              {{ form_widget(profileForm.prefAnimaux) }} 🐾 J'accepte les animaux
+            </label>
+            <label class="pref-item">
+              {{ form_widget(profileForm.prefDiscussion) }} 💬 J'aime discuter
+            </label>
+          </div>
+        </div>
+
+        {# SÉCURITÉ #}
+        <div class="form-section" id="securite">
+          <h3>🔒 Changer le mot de passe</h3>
+          <div class="form-group">
+            <label>Mot de passe actuel</label>
+            {{ form_widget(profileForm.currentPassword, {
+              attr: { class: 'form-control', placeholder: '••••••••' }
+            }) }}
+            {{ form_errors(profileForm.currentPassword) }}
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Nouveau mot de passe</label>
+              {{ form_widget(profileForm.newPassword, {
+                attr: { class: 'form-control', placeholder: 'Minimum 8 caractères' }
+              }) }}
+              {{ form_errors(profileForm.newPassword) }}
+            </div>
+            <div class="form-group">
+              <label>Confirmer le mot de passe</label>
+              {{ form_widget(profileForm.confirmPassword, {
+                attr: { class: 'form-control', placeholder: 'Répétez' }
+              }) }}
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:1rem;justify-content:flex-end;margin-bottom:1.5rem;">
+          <button type="reset" class="btn btn-outline">Annuler</button>
+          <button type="submit" class="btn btn-primary">💾 Sauvegarder</button>
+        </div>
+
+      {{ form_end(profileForm, {render_rest: false}) }}
+
+      {# ZONE DANGER #}
+      <div class="danger-zone" id="danger">
+        <h3>⚠️ Zone dangereuse</h3>
+        <p>La suppression de votre compte est irréversible. Toutes vos données seront définitivement effacées.</p>
+        <button class="btn btn-danger btn-sm" onclick="openModal('deleteAccountModal')">
+          🗑️ Supprimer mon compte
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  {# Modal suppression compte #}
+  <div class="modal-overlay" id="deleteAccountModal">
+    <div class="modal">
+      <h3>⚠️ Supprimer le compte</h3>
+      <p>Êtes-vous absolument sûr ? Cette action est <strong>irréversible</strong>.</p>
+      <div class="form-group" style="margin-top:1rem;">
+        <label>Tapez <strong>SUPPRIMER</strong> pour confirmer</label>
+        <input type="text" class="form-control" id="deleteConfirmInput"
+               placeholder="SUPPRIMER">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('deleteAccountModal')">Annuler</button>
+        <form action="{{ path('app_delete_account') }}" method="POST" id="deleteAccountForm">
+          <input type="hidden" name="_token" value="{{ csrf_token('delete_account') }}">
+          <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+            Supprimer définitivement
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function confirmDelete() {
+    const val = document.getElementById('deleteConfirmInput').value;
+    if (val !== 'SUPPRIMER') {
+      showToast('Veuillez taper SUPPRIMER pour confirmer.', 'error');
+      return;
+    }
+    document.getElementById('deleteAccountForm').submit();
+  }
+</script>
+{% endblock %}

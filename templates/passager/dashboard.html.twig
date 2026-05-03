@@ -1,0 +1,138 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}Tableau de bord — Passager{% endblock %}
+{% block page_title %}Bienvenue, {{ app.user.prenom }} 👋{% endblock %}
+
+{% block sidebar_nav %}
+  <a href="{{ path('passager_dashboard') }}"
+     class="{{ app.request.attributes.get('_route') == 'passager_dashboard' ? 'active' : '' }}">
+    <span class="icon">🏠</span> Tableau de bord
+  </a>
+  <a href="{{ path('trajet_search') }}"
+     class="{{ app.request.attributes.get('_route') == 'trajet_search' ? 'active' : '' }}">
+    <span class="icon">🔍</span> Rechercher un trajet
+  </a>
+  <a href="{{ path('passager_reservations') }}"
+     class="{{ app.request.attributes.get('_route') == 'passager_reservations' ? 'active' : '' }}">
+    <span class="icon">📋</span> Mes réservations
+  </a>
+  <a href="{{ path('passager_tracking') }}"
+     class="{{ app.request.attributes.get('_route') == 'passager_tracking' ? 'active' : '' }}">
+    <span class="icon">📍</span> Suivi GPS
+  </a>
+{% endblock %}
+
+{% block body %}
+
+  {# ===== STATS ===== #}
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue">🚗</div>
+      <div>
+        <div class="stat-value">{{ stats.trajets_effectues }}</div>
+        <div class="stat-label">Trajets effectués</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">📋</div>
+      <div>
+        <div class="stat-value">{{ stats.reservations_actives }}</div>
+        <div class="stat-label">Réservations actives</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">💳</div>
+      <div>
+        <div class="stat-value">{{ stats.total_depense }} DT</div>
+        <div class="stat-label">Total dépensé</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon blue">⭐</div>
+      <div>
+        <div class="stat-value">{{ stats.ma_note }}</div>
+        <div class="stat-label">Ma note</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;flex-wrap:wrap;">
+
+    {# ===== PROCHAINS TRAJETS ===== #}
+    <div>
+      <div class="page-header" style="margin-bottom:1rem;">
+        <h2 style="font-size:1.2rem;">Mes prochains trajets</h2>
+        <a href="{{ path('trajet_search') }}" class="btn btn-accent btn-sm">+ Trouver un trajet</a>
+      </div>
+
+      {% for reservation in prochains_trajets %}
+        <div class="trajet-card">
+          <div class="trajet-route">
+            <div class="cities">
+              {{ reservation.trajet.villeDepart }} <span class="arrow">→</span> {{ reservation.trajet.villeArrivee }}
+            </div>
+            <div class="trajet-meta">
+              <span>📅 {{ reservation.trajet.dateDepart|date('D. H:i') }}</span>
+              <span>🪑 {{ reservation.nbPlaces }} place(s) réservée(s)</span>
+            </div>
+          </div>
+          <div class="trajet-driver">
+            {{ m.avatar(reservation.trajet.conducteur.initials, 'md', 'primary') }}
+            <div>
+              <div class="driver-name">{{ reservation.trajet.conducteur.prenom }} {{ reservation.trajet.conducteur.nom[0] }}.</div>
+              <div class="driver-rating">
+                {{ m.stars(reservation.trajet.conducteur.noteMoyenne) }}
+              </div>
+            </div>
+          </div>
+          <div class="trajet-price">{{ reservation.trajet.prix }} DT</div>
+          {{ m.badge_statut_reservation(reservation.statut) }}
+        </div>
+      {% else %}
+        <div class="card">
+          <div class="card-body">
+            {{ m.empty_state('🔍', 'Aucune réservation à venir', 'Vous n\'avez pas encore de réservations pour vos prochains déplacements.', 'Trouver un trajet', path('trajet_search')) }}
+          </div>
+        </div>
+      {% endfor %}
+
+      {% if prochains_trajets|length > 0 %}
+        <div style="text-align:center;margin-top:1rem;">
+          <a href="{{ path('passager_reservations') }}"
+             style="color:var(--primary);font-size:0.9rem;font-weight:500;">
+            Voir toutes mes réservations →
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    {# ===== TRAJETS SUGGÉRÉS ===== #}
+    <div>
+      <div class="page-header" style="margin-bottom:1rem;">
+        <h2 style="font-size:1.2rem;">Trajets suggérés</h2>
+      </div>
+      {% for trajet in trajets_suggeres %}
+        <div class="card" style="margin-bottom:0.75rem;">
+          <div class="card-body" style="padding:1rem;">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:0.3rem;">
+              {{ trajet.villeDepart }} → {{ trajet.villeArrivee }}
+            </div>
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.6rem;">
+              📅 {{ trajet.dateDepart|date('D. d M') }} · {{ trajet.placesDisponibles }} places
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-family:'Syne',sans-serif;font-weight:800;color:var(--accent);">
+                {{ trajet.prix }} DT
+              </span>
+              <a href="{{ path('trajet_detail', {id: trajet.id}) }}" class="btn btn-primary btn-sm">Réserver</a>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <p style="color:var(--text-muted);font-size:0.9rem;">Aucun trajet disponible en ce moment.</p>
+      {% endfor %}
+    </div>
+
+  </div>
+{% endblock %}

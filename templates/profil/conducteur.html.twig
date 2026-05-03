@@ -1,0 +1,147 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}Mon profil{% endblock %}
+{% block page_title %}Mon espace{% endblock %}
+{% block page_subtitle %}Gérez votre profil, vos trajets et vos réservations{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-layout { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; align-items: start; }
+  @media(max-width:900px) { .profile-layout { grid-template-columns: 1fr; } }
+  .profile-card { background: #fff; border-radius: var(--radius); padding: 2rem 1.5rem; box-shadow: var(--shadow); text-align: center; position: sticky; top: 90px; }
+  .profile-badges { display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+  .profile-nav { background: #fff; border-radius: var(--radius); padding: 0.5rem; box-shadow: var(--shadow); margin-top: 1rem; }
+  .profile-nav a { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.9rem; color: var(--text); text-decoration: none; }
+  .profile-nav a:hover, .profile-nav a.active { background: var(--bg); color: var(--primary); font-weight: 500; }
+  .form-section { background: #fff; border-radius: var(--radius); padding: 1.75rem; box-shadow: var(--shadow); margin-bottom: 1.25rem; }
+  .form-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media(max-width:600px) { .form-row-2 { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-section">Navigation</div>
+  <a href="{{ path('conducteur_dashboard') }}"><span class="icon">🏠</span> Tableau de bord</a>
+  <a href="{{ path('trajet_publier') }}"><span class="icon">➕</span> Publier un trajet</a>
+  <a href="{{ path('trajet_mes_trajets') }}"><span class="icon">🚗</span> Mes trajets</a>
+  <a href="{{ path('conducteur_tracking') }}"><span class="icon">📍</span> GPS en direct</a>
+{% endblock %}
+
+{% block body %}
+  <div class="profile-layout">
+
+    {# ===== LEFT: CARD + NAV ===== #}
+    <div>
+      <div class="profile-card">
+        {{ m.avatar(app.user.initials, 'xl', 'primary') }}
+        <h2 style="font-size:1.2rem;margin-bottom:0.25rem;">{{ app.user.prenom }} {{ app.user.nom }}</h2>
+        <p style="color:var(--text-muted);font-size:0.88rem;">{{ app.user.email }}</p>
+        <div class="profile-badges">
+          <span class="badge badge-green">Vérifié ✓</span>
+          <span class="badge badge-blue">Conducteur</span>
+        </div>
+        <div style="margin-top:1rem;display:flex;justify-content:center;gap:2rem;font-size:0.85rem;">
+          <div><strong>{{ stats.nbTrajets|default(0) }}</strong><div style="color:var(--text-muted);">Trajets</div></div>
+          <div><strong>{{ stats.noteMoyenne|default(0) }}</strong><div style="color:var(--text-muted);">Note</div></div>
+          <div><strong>{{ stats.nbPassagers|default(0) }}</strong><div style="color:var(--text-muted);">Passagers</div></div>
+        </div>
+      </div>
+      <div class="profile-nav">
+        <a href="#info" class="active">👤 Informations</a>
+        <a href="#vehicule">🚗 Véhicule</a>
+        <a href="#securite">🔒 Sécurité</a>
+      </div>
+    </div>
+
+    {# ===== RIGHT: FORMS ===== #}
+    <div>
+      {{ form_start(profileForm) }}
+
+        {# INFORMATIONS PERSONNELLES #}
+        <div class="form-section" id="info">
+          <h3>👤 Informations personnelles</h3>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Prénom</label>
+              {{ form_widget(profileForm.prenom, { attr: { class: 'form-control' } }) }}
+              {{ form_errors(profileForm.prenom) }}
+            </div>
+            <div class="form-group">
+              <label>Nom</label>
+              {{ form_widget(profileForm.nom, { attr: { class: 'form-control' } }) }}
+              {{ form_errors(profileForm.nom) }}
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            {{ form_widget(profileForm.email, { attr: { class: 'form-control' } }) }}
+            {{ form_errors(profileForm.email) }}
+          </div>
+          <div class="form-group">
+            <label>Téléphone</label>
+            {{ form_widget(profileForm.telephone, { attr: { class: 'form-control' } }) }}
+          </div>
+          <div class="form-group">
+            <label>Bio (optionnel)</label>
+            {{ form_widget(profileForm.bio, { attr: { class: 'form-control', rows: 3, placeholder: 'Dites quelques mots sur vous…' } }) }}
+          </div>
+        </div>
+
+        {# VÉHICULE #}
+        <div class="form-section" id="vehicule">
+          <h3>🚗 Informations sur le véhicule</h3>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Marque & Modèle</label>
+              {{ form_widget(profileForm.marqueVehicule, { attr: { class: 'form-control', placeholder: 'Ex: Peugeot 208' } }) }}
+            </div>
+            <div class="form-group">
+              <label>Immatriculation</label>
+              {{ form_widget(profileForm.immatriculation, { attr: { class: 'form-control', placeholder: '123 TN 4567' } }) }}
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Couleur</label>
+              {{ form_widget(profileForm.couleur, { attr: { class: 'form-control', placeholder: 'Ex: Blanc' } }) }}
+            </div>
+            <div class="form-group">
+              <label>Places max.</label>
+              {{ form_widget(profileForm.nbPlacesVehicule, { attr: { class: 'form-control' } }) }}
+            </div>
+          </div>
+        </div>
+
+        {# SÉCURITÉ #}
+        <div class="form-section" id="securite">
+          <h3>🔒 Changer le mot de passe</h3>
+          <div class="form-group">
+            <label>Mot de passe actuel</label>
+            {{ form_widget(profileForm.currentPassword, { attr: { class: 'form-control', placeholder: '••••••••' } }) }}
+            {{ form_errors(profileForm.currentPassword) }}
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Nouveau mot de passe</label>
+              {{ form_widget(profileForm.newPassword, { attr: { class: 'form-control', placeholder: 'Minimum 8 caractères' } }) }}
+              {{ form_errors(profileForm.newPassword) }}
+            </div>
+            <div class="form-group">
+              <label>Confirmer</label>
+              {{ form_widget(profileForm.confirmPassword, { attr: { class: 'form-control', placeholder: 'Répétez' } }) }}
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:1rem;justify-content:flex-end;">
+          <button type="reset" class="btn btn-outline">Annuler</button>
+          <button type="submit" class="btn btn-primary">💾 Sauvegarder</button>
+        </div>
+
+      {{ form_end(profileForm, {render_rest: false}) }}
+    </div>
+
+  </div>
+{% endblock %}

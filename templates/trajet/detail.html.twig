@@ -1,0 +1,183 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}Détail du trajet{% endblock %}
+
+{% block extra_css %}
+<style>
+  .detail-layout { display: grid; grid-template-columns: 1fr 360px; gap: 1.5rem; }
+  @media(max-width:900px) { .detail-layout { grid-template-columns: 1fr; } }
+  .trajet-header { background: linear-gradient(135deg, var(--primary), #0f2147); color: #fff; border-radius: var(--radius); padding: 2rem; margin-bottom: 1.5rem; }
+  .trajet-header .route { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+  .trajet-header .route .arrow-big { color: var(--accent); }
+  .trajet-header .meta { display: flex; gap: 1.5rem; color: rgba(255,255,255,0.75); font-size: 0.9rem; flex-wrap: wrap; }
+  .info-section { background: #fff; border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+  .info-section h3 { font-size: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+  .info-row { display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.9rem; }
+  .info-row .key { color: var(--text-muted); }
+  .info-row .val { font-weight: 500; }
+  .driver-profile { display: flex; align-items: center; gap: 1rem; }
+  .driver-big-avatar { width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; }
+  .driver-details h4 { font-size: 1.1rem; margin-bottom: 0.2rem; }
+  .driver-details .stars-display { color: var(--warning); }
+  .vehicle-info { margin-top: 1rem; background: var(--bg); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.88rem; }
+  .prefs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+  .pref-tag { background: #f1f5f9; border-radius: 50px; padding: 0.3rem 0.75rem; font-size: 0.8rem; }
+  .booking-card { background: #fff; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); position: sticky; top: 1rem; }
+  .price-big { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--accent); margin-bottom: 0.25rem; }
+  .price-note { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .seat-selector { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+  .seat-selector label { font-size: 0.88rem; color: var(--text-muted); }
+  .seat-selector select { flex: 1; padding: 0.6rem; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+  .total-line { display: flex; justify-content: space-between; padding: 0.75rem 0; border-top: 2px solid var(--border); margin-top: 0.5rem; }
+  .total-line .label { font-weight: 600; }
+  .total-line .amount { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+  {% if 'ROLE_CONDUCTEUR' in app.user.roles and app.user.id == trajet.conducteurId %}
+    <div class="nav-section">Navigation</div>
+    <a href="{{ path('conducteur_dashboard') }}"><span class="icon">🏠</span> Tableau de bord</a>
+    <a href="{{ path('trajet_publier') }}"><span class="icon">➕</span> Publier un trajet</a>
+    <a href="{{ path('trajet_mes_trajets') }}" class="active"><span class="icon">🚗</span> Mes trajets</a>
+    <a href="{{ path('conducteur_tracking') }}"><span class="icon">📍</span> GPS en direct</a>
+  {% else %}
+    <div class="nav-section">Navigation</div>
+    <a href="{{ path('passager_dashboard') }}"><span class="icon">🏠</span> Tableau de bord</a>
+    <a href="{{ path('trajet_search') }}" class="active"><span class="icon">🔍</span> Rechercher un trajet</a>
+    <a href="{{ path('passager_reservations') }}"><span class="icon">📋</span> Mes réservations</a>
+    <a href="{{ path('passager_tracking') }}"><span class="icon">📍</span> Suivi GPS</a>
+  {% endif %}
+{% endblock %}
+
+{% block page_title %}{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block body %}
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+    <a href="{{ path('trajet_search') }}" style="color:var(--text-muted);font-size:0.9rem;">← Retour aux résultats</a>
+  </div>
+
+  {# ===== HEADER ===== #}
+  <div class="trajet-header">
+    <div class="route">
+      {{ trajet.villeDepart }} <span class="arrow-big">→</span> {{ trajet.villeArrivee }}
+    </div>
+    <div class="meta">
+      <span>📅 {{ trajet.dateDepart|date('l d M Y') }}</span>
+      <span>🕐 Départ {{ trajet.dateDepart|date('H:i') }}</span>
+      {% if trajet.dureeEstimee %}<span>⏱ Durée ~{{ trajet.dureeEstimee }}</span>{% endif %}
+      <span>🪑 {{ trajet.placesDisponibles }} place(s) disponible(s)</span>
+    </div>
+  </div>
+
+  <div class="detail-layout">
+
+    {# ===== LEFT: INFOS ===== #}
+    <div>
+      <div class="info-section">
+        <h3>👤 Conducteur</h3>
+        <div class="driver-profile">
+          {{ m.avatar(conducteur.initials|default('U'), 'lg', 'primary') }}
+          <div class="driver-details">
+            <h4>{{ conducteur.prenom }} {{ conducteur.nom }}</h4>
+            <div class="stars-display">
+              {{ m.stars(conducteur.noteMoyenne|default(5)) }}
+              <span style="color:var(--text-muted);">({{ conducteur.nbAvis|default(0) }} avis)</span>
+            </div>
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem;">
+              Membre depuis {{ conducteur.createdAt|default('now')|date('M. Y') }} · {{ conducteur.nbTrajets|default(0) }} trajets
+            </div>
+          </div>
+        </div>
+        {% if conducteur.marqueVehicule %}
+          <div class="vehicle-info">🚗 {{ conducteur.marqueVehicule }} ({{ conducteur.couleur }})</div>
+        {% endif %}
+        <div class="prefs">
+          {% if trajet.preferences.fumeur %}<span class="pref-tag">🚭 Fumeur</span>{% else %}<span class="pref-tag">🚭 Non-fumeur</span>{% endif %}
+          {% if trajet.preferences.musique %}<span class="pref-tag">🎵 Musique ok</span>{% endif %}
+          {% if trajet.preferences.animaux %}<span class="pref-tag">🐾 Animaux ok</span>{% endif %}
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3>🗺️ Détails du trajet</h3>
+        <div class="info-row"><span class="key">Départ</span><span class="val">{{ trajet.villeDepart }}</span></div>
+        <div class="info-row"><span class="key">Rendez-vous</span><span class="val">{{ trajet.pointRendezVous|default('À définir') }}</span></div>
+        <div class="info-row"><span class="key">Arrivée</span><span class="val">{{ trajet.villeArrivee }}</span></div>
+        <div class="info-row"><span class="key">Date</span><span class="val">{{ trajet.dateDepart|date('l d F Y') }}</span></div>
+        <div class="info-row"><span class="key">Heure de départ</span><span class="val">{{ trajet.dateDepart|date('H:i') }}</span></div>
+        {% if trajet.dureeEstimee %}
+          <div class="info-row"><span class="key">Durée estimée</span><span class="val">~{{ trajet.dureeEstimee }}</span></div>
+        {% endif %}
+        <div class="info-row"><span class="key">Places totales</span><span class="val">{{ trajet.placesTotales }}</span></div>
+        <div class="info-row">
+          <span class="key">Places disponibles</span>
+          <span class="val" style="color:var(--success);font-weight:700;">{{ trajet.placesDisponibles }}</span>
+        </div>
+        {% if trajet.messagePassagers %}
+          <div style="margin-top:1rem;padding:0.75rem;background:var(--bg);border-radius:8px;font-size:0.88rem;color:var(--text-muted);">
+            💬 {{ trajet.messagePassagers }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ===== RIGHT: BOOKING CARD ===== #}
+    <div>
+      <div class="booking-card">
+        <div class="price-big">{{ trajet.prix }} DT</div>
+        <div class="price-note">par place</div>
+
+        {% if trajet.placesDisponibles > 0 %}
+          <form action="{{ path('passager_reserver', {trajetId: trajet.id}) }}" method="POST" id="reservationForm">
+            <input type="hidden" name="_token" value="{{ csrf_token('reserver_' ~ trajet.id) }}">
+
+            <div class="seat-selector">
+              <label>Nombre de places</label>
+              <select name="nbPlaces" id="nbPlaces" onchange="updateTotal()">
+                {% for i in 1..trajet.placesDisponibles %}
+                  <option value="{{ i }}">{{ i }} place{{ i > 1 ? 's' : '' }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div style="background:var(--bg);border-radius:8px;padding:0.75rem;margin-bottom:1rem;font-size:0.88rem;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;">
+                <span>Prix unitaire</span><span>{{ trajet.prix }} DT</span>
+              </div>
+              <div class="total-line">
+                <span class="label">Total</span>
+                <span class="amount" id="totalAmount">{{ trajet.prix }} DT</span>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-accent btn-full btn-lg">
+              ✅ Réserver maintenant
+            </button>
+          </form>
+        {% else %}
+          <button class="btn btn-full" style="background:#e2e8f0;color:var(--text-muted);cursor:not-allowed;" disabled>
+            Complet
+          </button>
+        {% endif %}
+
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--text-muted);text-align:center;">
+          🔒 Paiement sécurisé · Remboursement en cas d'annulation
+        </div>
+      </div>
+    </div>
+
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const unitPrice = {{ trajet.prix }};
+  function updateTotal() {
+    const nb = parseInt(document.getElementById('nbPlaces').value) || 1;
+    document.getElementById('totalAmount').textContent = (unitPrice * nb) + ' DT';
+  }
+</script>
+{% endblock %}

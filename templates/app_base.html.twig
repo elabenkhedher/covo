@@ -1,0 +1,90 @@
+{% import '_macros.html.twig' as m %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% endblock %} — CovoISET</title>
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="app-layout">
+
+    {# ===== SIDEBAR ===== #}
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">Covo<span>ISET</span></div>
+      <div class="sidebar-user">
+        <div class="user-avatar">
+          {{ m.avatar(app.user.initials|default('??'), 'md', 'accent') }}
+        </div>
+        <div class="user-info">
+          <div class="name">{{ app.user.fullName|default('Utilisateur') }}</div>
+          <div class="role">
+            {% if app.user.roles|filter(r => r == 'ROLE_CONDUCTEUR')|length > 0 %}
+              🚗 Conducteur
+            {% else %}
+              🧍 Passager
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        {% block sidebar_nav %}{% endblock %}
+
+        <div class="nav-section">Compte</div>
+        {% if app.user.roles|filter(r => r == 'ROLE_CONDUCTEUR')|length > 0 %}
+          <a href="{{ path('conducteur_profile') }}"
+             class="{{ app.request.attributes.get('_route') == 'conducteur_profile' ? 'active' : '' }}">
+            <span class="icon">👤</span> Mon profil
+          </a>
+          <a href="{{ path('conducteur_notation') }}"
+             class="{{ app.request.attributes.get('_route') == 'conducteur_notation' ? 'active' : '' }}">
+            <span class="icon">⭐</span> Mes évaluations
+          </a>
+        {% else %}
+          <a href="{{ path('passager_profile') }}"
+             class="{{ app.request.attributes.get('_route') == 'passager_profile' ? 'active' : '' }}">
+            <span class="icon">👤</span> Mon profil
+          </a>
+          <a href="{{ path('passager_notation') }}"
+             class="{{ app.request.attributes.get('_route') == 'passager_notation' ? 'active' : '' }}">
+            <span class="icon">⭐</span> Mes évaluations
+          </a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="{{ path('app_home') }}">🏠 Accueil</a>
+        <a href="{{ path('app_logout') }}">🚪 Déconnexion</a>
+      </div>
+    </aside>
+
+    {# ===== MAIN CONTENT ===== #}
+    <main class="main-content">
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+        <div id="hamburger" class="hamburger">
+          <span></span><span></span><span></span>
+        </div>
+        <div>
+          <h1 style="font-size:1.5rem;">{% block page_title %}{% endblock %}</h1>
+          <p style="color:var(--text-muted);font-size:0.9rem;">{% block page_subtitle %}{% endblock %}</p>
+        </div>
+        {% block page_header_actions %}{% endblock %}
+      </div>
+
+      {# Flash messages #}
+      {{ m.flash_messages() }}
+
+      {% block body %}{% endblock %}
+    </main>
+
+  </div>{# end .app-layout #}
+
+  <div class="toast-container"></div>
+  <script src="{{ asset('js/app.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+
+</body>
+</html>

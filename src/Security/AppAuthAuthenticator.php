@@ -28,15 +28,15 @@ class AppAuthAuthenticator extends AbstractLoginFormAuthenticator
 
     public function authenticate(Request $request): Passport
     {
-        $email = $request->getPayload()->getString('email');
+        $email = $request->request->get('_username', '');
 
         $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $email);
 
         return new Passport(
             new UserBadge($email),
-            new PasswordCredentials($request->getPayload()->getString('password')),
+            new PasswordCredentials($request->request->get('_password', '')),
             [
-                new CsrfTokenBadge('authenticate', $request->getPayload()->getString('_csrf_token')),
+                new CsrfTokenBadge('authenticate', $request->request->get('_csrf_token')),
                 new RememberMeBadge(),
             ]
         );
@@ -44,12 +44,18 @@ class AppAuthAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        // If there's a target path (e.g. user was trying to access a protected page before logging in), redirect there
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }
 
-        // Default redirect to the homepage after successful login or registration
+        $user = $token->getUser();
+        if (in_array('ROLE_CONDUCTEUR', $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('conducteur_dashboard'));
+        }
+        if (in_array('ROLE_PASSAGER', $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('passager_dashboard'));
+        }
+
         return new RedirectResponse($this->urlGenerator->generate('app_home'));
     }
 

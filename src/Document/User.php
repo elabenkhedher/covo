@@ -31,6 +31,43 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[MongoDB\Field(type: 'string')]
     private ?string $password = null;
 
+    #[MongoDB\Field(type: 'string')]
+    private ?string $prenom = null;
+
+    #[MongoDB\Field(type: 'string')]
+    private ?string $nom = null;
+
+    #[MongoDB\Field(type: 'string')]
+    private ?string $telephone = null;
+
+    // Infos véhicule pour conducteurs
+    #[MongoDB\Field(type: 'string')]
+    private ?string $marqueVehicule = null;
+
+    #[MongoDB\Field(type: 'string')]
+    private ?string $immatriculation = null;
+
+    #[MongoDB\Field(type: 'string')]
+    private ?string $couleur = null;
+
+    #[MongoDB\Field(type: 'int')]
+    private ?int $nbPlacesVehicule = null;
+
+    #[MongoDB\Field(type: 'string', nullable: true)]
+    private ?string $bio = null;
+
+    #[MongoDB\Field(type: 'bool')]
+    private bool $prefNonFumeur = true;
+
+    #[MongoDB\Field(type: 'bool')]
+    private bool $prefMusique = false;
+
+    #[MongoDB\Field(type: 'bool')]
+    private bool $prefAnimaux = false;
+
+    #[MongoDB\Field(type: 'bool')]
+    private bool $prefDiscussion = false;
+
     public function getId(): ?string
     {
         return $this->id;
@@ -93,6 +130,52 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = $password;
 
         return $this;
+    }
+
+    public function getPrenom(): ?string { return $this->prenom; }
+    public function setPrenom(?string $prenom): self { $this->prenom = $prenom; return $this; }
+
+    public function getNom(): ?string { return $this->nom; }
+    public function setNom(?string $nom): self { $this->nom = $nom; return $this; }
+
+    public function getTelephone(): ?string { return $this->telephone; }
+    public function setTelephone(?string $telephone): self { $this->telephone = $telephone; return $this; }
+
+    public function getMarqueVehicule(): ?string { return $this->marqueVehicule; }
+    public function setMarqueVehicule(?string $marqueVehicule): self { $this->marqueVehicule = $marqueVehicule; return $this; }
+
+    public function getImmatriculation(): ?string { return $this->immatriculation; }
+    public function setImmatriculation(?string $immatriculation): self { $this->immatriculation = $immatriculation; return $this; }
+
+    public function getCouleur(): ?string { return $this->couleur; }
+    public function setCouleur(?string $couleur): self { $this->couleur = $couleur; return $this; }
+
+    public function getNbPlacesVehicule(): ?int { return $this->nbPlacesVehicule; }
+    public function setNbPlacesVehicule(?int $nbPlacesVehicule): self { $this->nbPlacesVehicule = $nbPlacesVehicule; return $this; }
+
+    public function getBio(): ?string { return $this->bio; }
+    public function setBio(?string $bio): self { $this->bio = $bio; return $this; }
+
+    public function isPrefNonFumeur(): bool { return $this->prefNonFumeur; }
+    public function setPrefNonFumeur(bool $prefNonFumeur): self { $this->prefNonFumeur = $prefNonFumeur; return $this; }
+
+    public function isPrefMusique(): bool { return $this->prefMusique; }
+    public function setPrefMusique(bool $prefMusique): self { $this->prefMusique = $prefMusique; return $this; }
+
+    public function isPrefAnimaux(): bool { return $this->prefAnimaux; }
+    public function setPrefAnimaux(bool $prefAnimaux): self { $this->prefAnimaux = $prefAnimaux; return $this; }
+
+    public function isPrefDiscussion(): bool { return $this->prefDiscussion; }
+    public function setPrefDiscussion(bool $prefDiscussion): self { $this->prefDiscussion = $prefDiscussion; return $this; }
+
+    public function getFullName(): string
+    {
+        return $this->prenom . ' ' . $this->nom;
+    }
+
+    public function getInitials(): string
+    {
+        return strtoupper(substr($this->prenom, 0, 1) . substr($this->nom, 0, 1));
     }
 
     /**

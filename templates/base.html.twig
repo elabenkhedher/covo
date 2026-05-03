@@ -1,24 +1,38 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CovoISET{% endblock %} — CovoISET</title>
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
+  {# ===== NAVBAR ===== #}
+  <nav class="navbar">
+    <div class="logo"><a href="{{ path('app_home') }}">Covo<span>ISET</span></a></div>
+    <div class="nav-links">
+      <a href="#features" class="hide-mobile">Fonctionnalités</a>
+      <a href="#how" class="hide-mobile">Comment ça marche</a>
+      <a href="{{ path('app_login') }}">Connexion</a>
+      <a href="{{ path('app_register') }}" class="btn-nav">S'inscrire</a>
+    </div>
+  </nav>
 
-        {% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
-        {% if frankenphpHotReload %}
-        <meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">
-        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
-        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
-        {% endif %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+  {# ===== PAGE CONTENT ===== #}
+  {% block body %}{% endblock %}
+
+  {# ===== FOOTER ===== #}
+  <footer>
+    <p>© {{ "now"|date("Y") }} <span>CovoISET</span> — ISET Kélibia · Projet Universitaire 2025/2026</p>
+  </footer>
+
+  {# ===== TOAST ===== #}
+  <div class="toast-container"></div>
+
+  <script src="{{ asset('js/app.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+
+</body>
 </html>

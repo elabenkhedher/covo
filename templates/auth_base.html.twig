@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% endblock %} — CovoISET</title>
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  <style>
+    body { display: flex; min-height: 100vh; }
+    .auth-left {
+      flex: 1;
+      background: {% block auth_left_gradient %}linear-gradient(160deg, var(--primary) 0%, #0f2147 100%){% endblock %};
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 3rem; position: relative; overflow: hidden;
+    }
+    .auth-left::before {
+      content: '';
+      position: absolute; width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(249,115,22,0.2), transparent 70%);
+      top: -100px; right: -100px;
+    }
+    .auth-left-content { position: relative; z-index: 1; text-align: center; max-width: 380px; }
+    .auth-left .logo { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 1.5rem; }
+    .auth-left .logo span { color: var(--accent); }
+    .auth-left h2 { color: #fff; font-size: 1.6rem; margin-bottom: 1rem; }
+    .auth-left p { color: rgba(255,255,255,0.6); line-height: 1.7; font-size: 0.95rem; }
+    .auth-left .illustration { font-size: 6rem; margin-bottom: 1.5rem; }
+    .auth-right {
+      width: {% block auth_right_width %}480px{% endblock %};
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem; background: var(--bg);
+      {% block auth_right_extra_style %}{% endblock %}
+    }
+    .auth-form-box { width: 100%; max-width: {% block auth_form_max_width %}400px{% endblock %}; }
+    .auth-form-box h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .auth-form-box .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; }
+    .form-card { background: #fff; border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); }
+    @media(max-width:768px) { .auth-left { display: none; } .auth-right { width: 100%; } }
+    {% block extra_auth_style %}{% endblock %}
+  </style>
+</head>
+<body>
+
+  {# ===== LEFT PANEL ===== #}
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <div class="logo">Covo<span>ISET</span></div>
+      <div class="illustration">{% block auth_illustration %}🚗{% endblock %}</div>
+      <h2>{% block auth_left_title %}{% endblock %}</h2>
+      <p>{% block auth_left_text %}{% endblock %}</p>
+    </div>
+  </div>
+
+  {# ===== RIGHT PANEL (FORM) ===== #}
+  <div class="auth-right">
+    <div class="auth-form-box">
+      {% block auth_form %}{% endblock %}
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+  <script src="{{ asset('js/app.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+
+</body>
+</html>

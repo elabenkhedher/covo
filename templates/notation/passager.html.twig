@@ -1,0 +1,174 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}Mes évaluations{% endblock %}
+{% block page_title %}Mes évaluations{% endblock %}
+{% block page_subtitle %}Avis reçus et conducteurs à noter{% endblock %}
+
+{% block extra_css %}
+<style>
+  .rating-header { background: #fff; border-radius: var(--radius); padding: 2rem; text-align: center; margin-bottom: 2rem; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+  .rating-score { font-family: 'Syne', sans-serif; font-size: 4rem; font-weight: 800; color: var(--primary); line-height: 1; }
+  .rating-stars { color: #fbbf24; font-size: 1.5rem; letter-spacing: 2px; }
+  .review-list { display: flex; flex-direction: column; gap: 1rem; }
+  .review-card { background: #fff; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); display: flex; gap: 1.5rem; }
+  @media(max-width:600px) { .review-card { flex-direction: column; gap: 1rem; } }
+  .review-content { flex: 1; }
+  .review-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+  .reviewer-name { font-weight: 600; color: var(--text); }
+  .review-date { font-size: 0.8rem; color: var(--text-muted); }
+  .review-comment { color: var(--text-muted); line-height: 1.5; font-size: 0.9rem; margin-top: 0.35rem; }
+  .review-trip { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; }
+  .stars-row { color: #fbbf24; font-size: 1rem; }
+  .star-input { display: flex; gap: 0.5rem; font-size: 1.8rem; cursor: pointer; }
+  .star-input span { color: var(--border); transition: color 0.1s; }
+  .star-input span.active { color: #fbbf24; }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+  <a href="{{ path('passager_dashboard') }}"><span class="icon">🏠</span> Tableau de bord</a>
+  <a href="{{ path('trajet_search') }}"><span class="icon">🔍</span> Rechercher un trajet</a>
+  <a href="{{ path('passager_reservations') }}"><span class="icon">📋</span> Mes réservations</a>
+  <a href="{{ path('passager_tracking') }}"><span class="icon">📍</span> Suivi GPS</a>
+{% endblock %}
+
+{% block body %}
+
+  {# ===== NOTE GLOBALE ===== #}
+  <div class="rating-header" style="position: relative; overflow: hidden; background: linear-gradient(135deg, #f0fdfa, #e0f2fe); border: 1px solid rgba(255,255,255,0.7); backdrop-filter: blur(10px);">
+    {# Decorative elements #}
+    <div style="position:absolute; top:-20%; left:-10%; width:150px; height:150px; background:rgba(56, 189, 248, 0.2); border-radius:50%; filter:blur(40px);"></div>
+    <div style="position:absolute; bottom:-20%; right:-10%; width:200px; height:200px; background:rgba(14, 165, 233, 0.15); border-radius:50%; filter:blur(50px);"></div>
+    
+    <div style="position: relative; z-index: 10;">
+      <div class="rating-score" style="text-shadow: 0 4px 10px rgba(14, 165, 233, 0.2); animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">{{ note_moyenne|number_format(1) }}</div>
+      <div class="rating-stars" style="animation: fade-in 1s ease-out 0.3s both;">
+        {{ m.stars(note_moyenne) }}
+      </div>
+      <div style="color:var(--text-muted);font-size:0.9rem; margin-top:0.5rem; font-weight:500;">
+        Ma note en tant que passager · {{ avis_recus|length }} avis
+      </div>
+    </div>
+  </div>
+
+  {# ===== À NOTER ===== #}
+  {% if a_noter|length > 0 %}
+    <div style="margin-bottom:2rem;">
+      <h3 style="font-size:1.1rem;margin-bottom:1rem;">⭐ Conducteurs à noter</h3>
+      {% for reservation in a_noter %}
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+              <div>
+                <strong>{{ reservation.trajet.villeDepart }} → {{ reservation.trajet.villeArrivee }}</strong>
+                <div style="color:var(--text-muted);font-size:0.85rem;">
+                  📅 {{ reservation.trajet.dateDepart|date('d M Y') }} ·
+                  Conducteur : {{ reservation.trajet.conducteur.prenom }} {{ reservation.trajet.conducteur.nom|slice(0, 1) }}.
+                </div>
+              </div>
+            </div>
+            <form action="{{ path('passager_noter_conducteur', {reservationId: reservation.id}) }}" method="POST">
+              <input type="hidden" name="_token" value="{{ csrf_token('noter_' ~ reservation.id) }}">
+              <div style="margin-bottom:0.75rem;">
+                <label style="font-size:0.85rem;margin-bottom:0.35rem;display:block;">Note</label>
+                <div class="star-input" id="stars-{{ reservation.id }}" onclick="setNote(this, event)">
+                  {% for i in 1..5 %}
+                    <span data-val="{{ i }}">★</span>
+                  {% endfor %}
+                </div>
+                <input type="hidden" name="note" id="note-{{ reservation.id }}" value="5">
+              </div>
+              <div class="form-group">
+                <label style="font-size:0.85rem;">Commentaire (optionnel)</label>
+                <textarea class="form-control" name="commentaire" rows="2"
+                          placeholder="Décrivez votre expérience…"></textarea>
+              </div>
+              <button type="submit" class="btn btn-accent btn-sm">Envoyer l'avis</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {# ===== AVIS REÇUS ===== #}
+  <h3 style="font-size:1.1rem;margin-bottom:1rem;">Avis reçus</h3>
+  <div class="review-list">
+    {% for avis in avis_recus %}
+      <div class="review-card" style="animation: slide-up 0.5s ease-out {{ loop.index0 * 0.1 }}s both;">
+        {{ m.avatar(avis.auteur.initials, 'md', 'primary') }}
+        <div class="review-content">
+          <div class="review-top">
+            <div>
+              <div class="reviewer-name">{{ avis.auteur.prenom }} {{ avis.auteur.nom|slice(0, 1) }}. (conducteur)</div>
+              <div class="stars-row">
+                {{ m.stars(avis.note) }}
+              </div>
+            </div>
+            <div class="review-date">{{ avis.createdAt|date('d M Y') }}</div>
+          </div>
+          {% if avis.commentaire %}
+            <div class="review-comment">"{{ avis.commentaire }}"</div>
+          {% endif %}
+          <div class="review-trip">
+            🚗 {{ avis.trajet.villeDepart }} → {{ avis.trajet.villeArrivee }} ·
+            {{ avis.trajet.dateDepart|date('d M Y') }}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div style="text-align:center; padding: 4rem 2rem; background: rgba(255,255,255,0.7); backdrop-filter:blur(10px); border-radius: var(--radius); border: 1px dashed var(--border); animation: fade-in 0.8s ease-out;">
+        <div style="font-size:4rem; margin-bottom:1.5rem; animation: float 3s ease-in-out infinite;">⭐</div>
+        <h2 style="font-family:'Syne',sans-serif; font-size:1.5rem; margin-bottom:1rem; color:var(--text);">Aucun avis reçu</h2>
+        <p style="color:var(--text-muted); max-width: 400px; margin: 0 auto 2rem; line-height: 1.6;">
+          Vous n'avez pas encore reçu d'évaluations de la part des conducteurs. Voyagez et laissez une bonne impression pour obtenir vos premières étoiles !
+        </p>
+        <a href="{{ path('passager_dashboard') }}" class="btn btn-outline" style="border-radius: 50px; padding: 0.75rem 1.5rem;">
+          🏠 Retour au tableau de bord
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+
+  <style>
+    @keyframes pop-in {
+      0% { opacity: 0; transform: scale(0.5); }
+      70% { transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(5deg); }
+      100% { transform: translateY(0) rotate(0deg); }
+    }
+  </style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function setNote(container, event) {
+    const clicked = event.target.closest('span');
+    if (!clicked) return;
+    const val = parseInt(clicked.dataset.val);
+    const id = container.id.replace('stars-', '');
+    container.querySelectorAll('span').forEach((s, i) => {
+      s.classList.toggle('active', i < val);
+    });
+    document.getElementById('note-' + id).value = val;
+  }
+  // Init all star inputs to show 5 stars active
+  document.querySelectorAll('.star-input').forEach(row => {
+    row.querySelectorAll('span').forEach(s => s.classList.add('active'));
+  });
+</script>
+{% endblock %}

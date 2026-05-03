@@ -1,0 +1,126 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}Mes trajets publiés{% endblock %}
+{% block page_title %}Mes trajets{% endblock %}
+{% block page_subtitle %}Historique et gestion de vos trajets publiés{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-section">Navigation</div>
+  <a href="{{ path('conducteur_dashboard') }}"><span class="icon">🏠</span> Tableau de bord</a>
+  <a href="{{ path('trajet_publier') }}"
+     class="{{ app.request.attributes.get('_route') == 'trajet_publier' ? 'active' : '' }}">
+    <span class="icon">➕</span> Publier un trajet
+  </a>
+  <a href="{{ path('trajet_mes_trajets') }}"
+     class="{{ app.request.attributes.get('_route') == 'trajet_mes_trajets' ? 'active' : '' }}">
+    <span class="icon">🚗</span> Mes trajets
+  </a>
+  <a href="{{ path('conducteur_tracking') }}"><span class="icon">📍</span> GPS en direct</a>
+{% endblock %}
+
+{% block body %}
+
+  {# ===== FILTER TABS ===== #}
+  <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+    <button class="btn btn-primary btn-sm" onclick="filterTable('tous', this)">
+      Tous ({{ trajets|length }})
+    </button>
+    <button class="btn btn-sm" style="background:#d1fae5;color:#065f46;"
+            onclick="filterTable('actif', this)">
+      Actifs ({{ trajets|filter(t => t.statut == 'actif')|length }})
+    </button>
+    <button class="btn btn-sm" style="background:#f1f5f9;color:#475569;"
+            onclick="filterTable('termine', this)">
+      Terminés ({{ trajets|filter(t => t.statut == 'termine')|length }})
+    </button>
+    <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;"
+            onclick="filterTable('annule', this)">
+      Annulés ({{ trajets|filter(t => t.statut == 'annule')|length }})
+    </button>
+  </div>
+
+  {# ===== TABLE ===== #}
+  <div class="table-wrapper">
+    <table class="data-table" id="trajetsTable">
+      <thead>
+        <tr>
+          <th>Trajet</th>
+          <th>Date</th>
+          <th>Places réservées</th>
+          <th>Prix unitaire</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for trajet in trajets %}
+          <tr data-status="{{ trajet.statut }}">
+            <td><strong>{{ trajet.villeDepart }} → {{ trajet.villeArrivee }}</strong></td>
+            <td>{{ trajet.dateDepart|date('D. d M · H:i') }}</td>
+            <td>
+              <span style="font-weight:600;">{{ trajet.placesReservees }}/{{ trajet.placesTotales }}</span>
+            </td>
+            <td><strong>{{ trajet.prix }} DT</strong></td>
+            <td>
+              {{ m.badge_statut_trajet(trajet.statut) }}
+            </td>
+            <td>
+              <div class="table-actions">
+                <a href="{{ path('trajet_detail_conducteur', {id: trajet.id}) }}"
+                   class="btn btn-primary btn-sm">👁️ Voir</a>
+                {% if trajet.statut == 'actif' %}
+                  <a href="{{ path('trajet_modifier', {id: trajet.id}) }}"
+                     class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;">✏️ Modifier</a>
+                  <button class="btn btn-danger btn-sm"
+                          onclick="openModal('cancelTrajetModal-{{ trajet.id }}')">🚫 Annuler</button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+
+          {# Modal annulation par trajet #}
+          {% if trajet.statut == 'actif' %}
+            {{ m.confirm_modal('cancelTrajetModal-' ~ trajet.id, 'Annuler le trajet', 'Voulez-vous vraiment annuler ce trajet ? Les passagers inscrits seront notifiés et remboursés.', 'Oui, annuler') }}
+            <script>
+              document.getElementById('cancelTrajetModal-{{ trajet.id }}-confirm').onclick = function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ path('conducteur_annuler_trajet', {id: trajet.id}) }}";
+                const token = document.createElement('input');
+                token.type = 'hidden';
+                token.name = '_token';
+                token.value = "{{ csrf_token('annuler_trajet_' ~ trajet.id) }}";
+                form.appendChild(token);
+                document.body.appendChild(form);
+                form.submit();
+              };
+            </script>
+          {% endif %}
+        {% else %}
+          <tr>
+            <td colspan="6">
+              {{ m.empty_state('🚗', 'Aucun trajet publié', 'Vous n\'avez pas encore publié de trajet pour le moment.', 'Publier un trajet', path('trajet_publier')) }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function filterTable(status, btn) {
+    const rows = document.querySelectorAll('#trajetsTable tbody tr[data-status]');
+    rows.forEach(r => {
+      r.style.display = (status === 'tous' || r.dataset.status === status) ? '' : 'none';
+    });
+    
+    // Update active button state
+    document.querySelectorAll('[onclick^="filterTable"]').forEach(b => b.classList.remove('btn-primary'));
+    btn.classList.add('btn-primary');
+  }
+</script>
+{% endblock %}

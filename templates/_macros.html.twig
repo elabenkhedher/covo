@@ -1,0 +1,139 @@
+{#
+  ============================================================
+  _macros.html.twig — Macros réutilisables CovoISET
+  Usage : {% import '_macros.html.twig' as m %}
+  ============================================================
+#}
+
+{# ===== BADGE STATUT TRAJET ===== #}
+{% macro badge_statut_trajet(statut) %}
+  {% set map = {
+    'actif':    { cls: 'badge-success',  label: 'Actif' },
+    'en_cours': { cls: 'badge-info',     label: 'En cours' },
+    'termine':  { cls: 'badge-grey',     label: 'Terminé' },
+    'annule':   { cls: 'badge-danger',   label: 'Annulé' }
+  } %}
+  {% set cfg = map[statut] ?? { cls: 'badge-grey', label: statut|capitalize } %}
+  <span class="badge {{ cfg.cls }}">{{ cfg.label }}</span>
+{% endmacro %}
+
+{# ===== BADGE STATUT RÉSERVATION ===== #}
+{% macro badge_statut_reservation(statut) %}
+  {% set map = {
+    'confirmee':  { cls: 'badge-success', label: 'Confirmée' },
+    'en_attente': { cls: 'badge-warning', label: 'En attente' },
+    'terminee':   { cls: 'badge-grey',    label: 'Terminée' },
+    'annulee':    { cls: 'badge-danger',  label: 'Annulée' }
+  } %}
+  {% set cfg = map[statut] ?? { cls: 'badge-grey', label: statut|capitalize } %}
+  <span class="badge {{ cfg.cls }}">{{ cfg.label }}</span>
+{% endmacro %}
+
+{# ===== ÉTOILES ===== #}
+{% macro stars(note, max=5) %}
+  <span style="color:#fbbf24;">
+    {%- for i in 1..max -%}
+      {{- i <= note|round ? '★' : '☆' -}}
+    {%- endfor -%}
+  </span>
+  <span style="color:var(--text-muted);font-size:0.85em;margin-left:0.25rem;">{{ note|number_format(1) }}</span>
+{% endmacro %}
+
+{# ===== AVATAR INITIALES ===== #}
+{% macro avatar(initials, size='md', color='primary') %}
+  {% set sizes = { sm: '28px', md: '40px', lg: '56px', xl: '80px' } %}
+  {% set dim = sizes[size] ?? sizes.md %}
+  <div style="width:{{ dim }};height:{{ dim }};border-radius:50%;background:var(--{{ color }});color:#fff;
+              display:flex;align-items:center;justify-content:center;
+              font-weight:700;font-size:{{ size == 'xl' ? '1.5rem' : '0.85rem' }};flex-shrink:0;">
+    {{ initials }}
+  </div>
+{% endmacro %}
+
+{# ===== CARTE TRAJET (résumé) ===== #}
+{% macro trajet_card(trajet, mode='passager') %}
+  <div class="trajet-card">
+    <div class="trajet-route">
+      <div class="cities">{{ trajet.villeDepart }} <span class="arrow">→</span> {{ trajet.villeArrivee }}</div>
+      <div class="trajet-meta">
+        <span>📅 {{ trajet.dateDepart|date('D. d M, H:i') }}</span>
+        <span>🪑 {{ trajet.placesDisponibles }} place(s) dispo</span>
+        {% if trajet.dureeEstimee %}
+          <span>⏱ ~{{ trajet.dureeEstimee }}</span>
+        {% endif %}
+      </div>
+    </div>
+    {% if mode == 'passager' %}
+      <div class="trajet-driver">
+        <div class="driver-avatar">{{ trajet.conducteur.initials }}</div>
+        <div>
+          <div class="driver-name">{{ trajet.conducteur.prenom }} {{ trajet.conducteur.nom[0] }}.</div>
+          <div class="driver-rating">
+            {% for i in 1..5 %}{{ i <= trajet.conducteur.noteMoyenne ? '★' : '☆' }}{% endfor %}
+            {{ trajet.conducteur.noteMoyenne }}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    <div class="trajet-price">{{ trajet.prix }} DT</div>
+  </div>
+{% endmacro %}
+
+{# ===== PAGINATION ===== #}
+{% macro pagination(currentPage, totalPages, routeName, routeParams={}) %}
+  {% if totalPages > 1 %}
+    <nav style="display:flex;gap:0.5rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap;">
+      {% if currentPage > 1 %}
+        <a href="{{ path(routeName, routeParams|merge({page: currentPage - 1})) }}"
+           class="btn btn-outline btn-sm">← Précédent</a>
+      {% endif %}
+      {% for p in 1..totalPages %}
+        <a href="{{ path(routeName, routeParams|merge({page: p})) }}"
+           class="btn btn-sm {{ p == currentPage ? 'btn-primary' : 'btn-outline' }}">
+          {{ p }}
+        </a>
+      {% endfor %}
+      {% if currentPage < totalPages %}
+        <a href="{{ path(routeName, routeParams|merge({page: currentPage + 1})) }}"
+           class="btn btn-outline btn-sm">Suivant →</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endmacro %}
+
+{# ===== ALERTE FLASH ===== #}
+{% macro flash_messages() %}
+  {% for type, messages in app.flashes %}
+    {% for message in messages %}
+      <div class="alert alert-{{ type }}" style="margin-bottom:0.75rem;padding:0.85rem 1.25rem;border-radius:10px;font-size:0.9rem;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endfor %}
+{% endmacro %}
+
+{# ===== EMPTY STATE ===== #}
+{% macro empty_state(emoji, title, desc, actionLabel='', actionUrl='') %}
+  <div style="text-align:center;padding:3rem 2rem;color:var(--text-muted);">
+    <div style="font-size:3rem;margin-bottom:0.75rem;">{{ emoji }}</div>
+    <h3 style="font-size:1.1rem;color:var(--text);margin-bottom:0.4rem;">{{ title }}</h3>
+    <p style="font-size:0.9rem;margin-bottom:1.25rem;">{{ desc }}</p>
+    {% if actionLabel and actionUrl %}
+      <a href="{{ actionUrl }}" class="btn btn-accent btn-sm">{{ actionLabel }}</a>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{# ===== MODAL CONFIRMATION ===== #}
+{% macro confirm_modal(id, title, message, confirmLabel='Confirmer', confirmClass='btn-danger') %}
+  <div class="modal-overlay" id="{{ id }}">
+    <div class="modal">
+      <h3>{{ title }}</h3>
+      <p>{{ message }}</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('{{ id }}')">Annuler</button>
+        <button class="{{ 'btn ' ~ confirmClass }}" id="{{ id }}-confirm">{{ confirmLabel }}</button>
+      </div>
+    </div>
+  </div>
+{% endmacro %}

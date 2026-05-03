@@ -1,0 +1,143 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}Mes réservations{% endblock %}
+{% block page_title %}Mes réservations{% endblock %}
+{% block page_subtitle %}Historique de tous vos trajets réservés{% endblock %}
+
+{% block sidebar_nav %}
+  <a href="{{ path('passager_dashboard') }}"><span class="icon">🏠</span> Tableau de bord</a>
+  <a href="{{ path('trajet_search') }}"><span class="icon">🔍</span> Rechercher un trajet</a>
+  <a href="{{ path('passager_reservations') }}" class="active"><span class="icon">📋</span> Mes réservations</a>
+  <a href="{{ path('passager_tracking') }}"><span class="icon">📍</span> Suivi GPS</a>
+{% endblock %}
+
+{% block body %}
+
+  {# ===== FILTER TABS ===== #}
+  <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+    <button class="btn btn-primary btn-sm" onclick="filterRes('tous',this)">
+      Tous ({{ reservations|length }})
+    </button>
+    <button class="btn btn-sm" style="background:#d1fae5;color:#065f46;"
+            onclick="filterRes('confirmee',this)">
+      Confirmés ({{ reservations|filter(r => r.statut == 'confirmee')|length }})
+    </button>
+    <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;"
+            onclick="filterRes('en_attente',this)">
+      En attente ({{ reservations|filter(r => r.statut == 'en_attente')|length }})
+    </button>
+    <button class="btn btn-sm" style="background:#f1f5f9;color:#475569;"
+            onclick="filterRes('terminee',this)">
+      Terminés ({{ reservations|filter(r => r.statut == 'terminee')|length }})
+    </button>
+    <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;"
+            onclick="filterRes('annulee',this)">
+      Annulés ({{ reservations|filter(r => r.statut == 'annulee')|length }})
+    </button>
+  </div>
+
+  {# ===== TABLE ===== #}
+  <div class="table-wrapper">
+    <table class="data-table" id="resTable">
+      <thead>
+        <tr>
+          <th>Trajet</th>
+          <th>Date</th>
+          <th>Conducteur</th>
+          <th>Places</th>
+          <th>Montant</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for res in reservations %}
+          {% set trj = res.trajet %}
+          {% set cond = res.conducteur %}
+          <tr data-status="{{ res.statut }}">
+            <td><strong>{{ trj.villeDepart|default('Inconnu') }} → {{ trj.villeArrivee|default('Inconnu') }}</strong></td>
+            <td>{{ trj.dateDepart|default(null) ? trj.dateDepart|date('D. d M · H:i') : '--' }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                {{ m.avatar(cond.initials|default('??'), 'sm', 'primary') }}
+                {{ cond.prenom|default('Utilisateur') }} {{ cond.nom|default('Inconnu')|slice(0, 1) }}.
+              </div>
+            </td>
+            <td>{{ res.nbPlaces }}</td>
+            <td>
+              {% if res.statut == 'annulee' %}
+                <s style="color:var(--text-muted);">{{ res.montant }} DT</s>
+                <span style="color:var(--success);font-size:0.8rem;">Remboursé</span>
+              {% else %}
+                <strong>{{ res.montant }} DT</strong>
+              {% endif %}
+            </td>
+            <td>
+              {{ m.badge_statut_reservation(res.statut) }}
+            </td>
+            <td>
+              <div class="table-actions">
+                {% if res.statut == 'confirmee' %}
+                  <a href="{{ path('passager_tracking', {reservationId: res.id}) }}"
+                     class="btn btn-primary btn-sm">📍 Suivre</a>
+                  <button class="btn btn-danger btn-sm"
+                          onclick="openModal('cancelResModal-{{ res.id }}')">Annuler</button>
+                {% elseif res.statut == 'en_attente' %}
+                  <button class="btn btn-danger btn-sm"
+                          onclick="openModal('cancelResModal-{{ res.id }}')">Annuler</button>
+                {% elseif res.statut == 'terminee' and not (res.reservation.noteDeposee|default(false)) %}
+                  <a href="{{ path('passager_noter_conducteur', {reservationId: res.id}) }}"
+                     class="btn btn-sm" style="background:#fef3c7;color:#92400e;">⭐ Noter</a>
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+
+          {# Modal annulation #}
+          {% if res.statut in ['confirmee','en_attente'] %}
+            {{ m.confirm_modal('cancelResModal-' ~ res.id, 'Annuler la réservation', 'Voulez-vous vraiment annuler ? Vous serez remboursé selon notre politique d\'annulation.', 'Oui, annuler') }}
+            <script>
+              document.getElementById('cancelResModal-{{ res.id }}-confirm').onclick = function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ path('passager_annuler_reservation', {id: res.id}) }}";
+                const token = document.createElement('input');
+                token.type = 'hidden';
+                token.name = '_token';
+                token.value = "{{ csrf_token('annuler_reservation_' ~ res.id) }}";
+                form.appendChild(token);
+                document.body.appendChild(form);
+                form.submit();
+              };
+            </script>
+          {% endif %}
+        {% else %}
+          <tr>
+            <td colspan="7">
+              {{ m.empty_state('📋', 'Aucune réservation', 'Vous n\'avez pas encore effectué de réservation.', 'Trouver un trajet', path('trajet_search')) }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function filterRes(status, btn) {
+    const rows = document.querySelectorAll('#resTable tbody tr[data-status]');
+    rows.forEach(r => {
+      r.style.display = (status === 'tous' || r.dataset.status === status) ? '' : 'none';
+    });
+    
+    // Update active button state
+    document.querySelectorAll('[onclick^="filterRes"]').forEach(b => b.classList.remove('btn-primary'));
+    btn.classList.add('btn-primary');
+  }
+</script>
+{% endblock %}

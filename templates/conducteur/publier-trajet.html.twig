@@ -1,0 +1,196 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}{% if trajet is defined and trajet.id %}Modifier le trajet{% else %}Publier un trajet{% endif %}{% endblock %}
+{% block page_title %}{% if trajet is defined and trajet.id %}✏️ Modifier le trajet{% else %}🚀 Publier un trajet{% endif %}{% endblock %}
+{% block page_subtitle %}{% if trajet is defined and trajet.id %}Modifiez les informations de votre trajet{{ trajet.villeDepart }} → {{ trajet.villeArrivee }}{% else %}Remplissez les informations de votre trajet{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .publish-layout { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; }
+  @media(max-width:900px) { .publish-layout { grid-template-columns: 1fr; } }
+  .form-section { background: #fff; border-radius: var(--radius); padding: 1.75rem; box-shadow: var(--shadow); margin-bottom: 1.25rem; }
+  .form-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  .preview-card { background: #fff; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); position: sticky; top: 1rem; }
+  .preview-card h3 { font-size: 1rem; margin-bottom: 1.25rem; color: var(--text-muted); }
+  .preview-route { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem; }
+  .preview-route .arrow { color: var(--accent); }
+  .preview-detail { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+  .preview-price { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--accent); margin-top: 1rem; }
+  .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .checkbox-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; cursor: pointer; padding: 0.5rem; border-radius: 8px; }
+  .checkbox-item:hover { background: var(--bg); }
+  @media(max-width:600px) { .form-row-2, .form-row-3 { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-section">Navigation</div>
+  <a href="{{ path('conducteur_dashboard') }}"><span class="icon">🏠</span> Tableau de bord</a>
+  <a href="{{ path('trajet_publier') }}"{% if not (trajet is defined and trajet.id) %} class="active"{% endif %}><span class="icon">➕</span> Publier un trajet</a>
+  <a href="{{ path('trajet_mes_trajets') }}"{% if trajet is defined and trajet.id %} class="active"{% endif %}><span class="icon">🚗</span> Mes trajets</a>
+  <a href="{{ path('conducteur_tracking') }}"><span class="icon">📍</span> GPS en direct</a>
+{% endblock %}
+
+{% block body %}
+  <div class="publish-layout">
+
+    {# ===== FORM ===== #}
+    <div>
+      {{ form_start(trajetForm, { attr: { novalidate: 'novalidate' } }) }}
+
+        <div class="form-section">
+          {{ form_errors(trajetForm) }}
+          <h3>📍 Itinéraire</h3>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Ville de départ *</label>
+              {{ form_widget(trajetForm.villeDepart, { attr: { class: 'form-control', placeholder: 'Ex: Tunis', oninput: 'updatePreview()' } }) }}
+              {{ form_errors(trajetForm.villeDepart) }}
+            </div>
+            <div class="form-group">
+              <label>Ville d'arrivée *</label>
+              {{ form_widget(trajetForm.villeArrivee, { attr: { class: 'form-control', placeholder: 'Ex: Kélibia', oninput: 'updatePreview()' } }) }}
+              {{ form_errors(trajetForm.villeArrivee) }}
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Point de rendez-vous précis</label>
+            {{ form_widget(trajetForm.pointRendezVous, { attr: { class: 'form-control', placeholder: 'Ex: Devant le métro Bab Souika' } }) }}
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>📅 Date et heure</h3>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Date de départ *</label>
+              {{ form_widget(trajetForm.dateDepart, { attr: { class: 'form-control', oninput: 'updatePreview()' } }) }}
+              {{ form_errors(trajetForm.dateDepart) }}
+            </div>
+            <div class="form-group">
+              <label>Heure de départ *</label>
+              {{ form_widget(trajetForm.heureDepart, { attr: { class: 'form-control', oninput: 'updatePreview()' } }) }}
+              {{ form_errors(trajetForm.heureDepart) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>💺 Places et tarif</h3>
+          <div class="form-row-3">
+            <div class="form-group">
+              <label>Nombre de places *</label>
+              {{ form_widget(trajetForm.nbPlacesTotal, { attr: { class: 'form-control', id: 'places', onchange: 'updatePreview()' } }) }}
+              {{ form_errors(trajetForm.nbPlacesTotal) }}
+            </div>
+            <div class="form-group">
+              <label>Prix par place (DT) *</label>
+              {{ form_widget(trajetForm.prix, { attr: { class: 'form-control', id: 'price', placeholder: '12', oninput: 'updatePreview()' } }) }}
+              {{ form_errors(trajetForm.prix) }}
+            </div>
+            <div class="form-group">
+              <label>Véhicule</label>
+              {# Fallback if vehicule field is not in form yet #}
+              {% if trajetForm.vehicule is defined %}
+                {{ form_widget(trajetForm.vehicule, { attr: { class: 'form-control' } }) }}
+              {% else %}
+                <input type="text" class="form-control" value="{{ app.user.marqueVehicule }}" readonly>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>⚙️ Préférences</h3>
+          <div class="checkbox-grid">
+            <label class="checkbox-item">
+              {% if trajetForm.nonFumeur is defined %}
+                {{ form_widget(trajetForm.nonFumeur) }}
+              {% else %}
+                <input type="checkbox" name="preferences[fumeur]">
+              {% endif %}
+              🚭 Non-fumeur
+            </label>
+            <label class="checkbox-item">
+              {% if trajetForm.musiqueAutorisee is defined %}
+                {{ form_widget(trajetForm.musiqueAutorisee) }}
+              {% else %}
+                <input type="checkbox" name="preferences[musique]" checked>
+              {% endif %}
+              🎵 Musique autorisée
+            </label>
+            <label class="checkbox-item">
+              {% if trajetForm.animauxAcceptes is defined %}
+                {{ form_widget(trajetForm.animauxAcceptes) }}
+              {% else %}
+                <input type="checkbox" name="preferences[animaux]">
+              {% endif %}
+              🐾 Animaux acceptés
+            </label>
+            <label class="checkbox-item">
+              {% if trajetForm.discussionAppreciee is defined %}
+                {{ form_widget(trajetForm.discussionAppreciee) }}
+              {% else %}
+                <input type="checkbox" name="preferences[discussion]" checked>
+              {% endif %}
+              💬 Discussion appréciée
+            </label>
+          </div>
+          <div class="form-group" style="margin-top:1rem;">
+            <label>Message pour les passagers (optionnel)</label>
+            {{ form_widget(trajetForm.messagePassagers, { attr: { class: 'form-control', rows: 3, placeholder: 'Ex: Je pars de l\'Avenue Bourguiba. Départ ponctuel.' } }) }}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:1rem;">
+          <a href="{{ path('trajet_mes_trajets') }}" class="btn btn-outline">Annuler</a>
+          <button type="submit" class="btn btn-accent btn-lg" style="flex:1">
+            {% if trajet is defined and trajet.id %}✅ Enregistrer les modifications{% else %}🚀 Publier le trajet{% endif %}
+          </button>
+        </div>
+
+      {{ form_row(trajetForm._token) }}
+      {{ form_end(trajetForm, {render_rest: false}) }}
+    </div>
+
+    {# ===== PREVIEW ===== #}
+    <div>
+      <div class="preview-card">
+        <h3>👁️ Aperçu de votre annonce</h3>
+        <div class="preview-route">
+          <span id="prev-from">Départ</span> <span class="arrow">→</span> <span id="prev-to">Arrivée</span>
+        </div>
+        <div class="preview-detail">📅 <span id="prev-date">--/--/----</span> à <span id="prev-time">--:--</span></div>
+        <div class="preview-detail">🪑 <span id="prev-places">--</span> place(s) disponible(s)</div>
+        <div class="preview-detail">🚗 {{ app.user.vehicule|default('Véhicule non défini') }} · {{ app.user.prenom }} · {{ m.stars(app.user.noteMoyenne|default(0)) }}</div>
+        <div class="preview-price"><span id="prev-price">-- DT</span></div>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+          {{ m.badge_statut_trajet('actif') }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function updatePreview() {
+    const from  = document.querySelector('[name*="villeDepart"]')?.value  || 'Départ';
+    const to    = document.querySelector('[name*="villeArrivee"]')?.value || 'Arrivée';
+    const date  = document.querySelector('[name*="dateDepart"]')?.value;
+    const time  = document.querySelector('[name*="heureDepart"]')?.value  || '--:--';
+    const places = document.getElementById('places')?.value              || '--';
+    const price  = document.getElementById('price')?.value;
+    document.getElementById('prev-from').textContent   = from;
+    document.getElementById('prev-to').textContent     = to;
+    document.getElementById('prev-date').textContent   = date ? new Date(date).toLocaleDateString('fr-FR') : '--/--/----';
+    document.getElementById('prev-time').textContent   = time;
+    document.getElementById('prev-places').textContent = places;
+    document.getElementById('prev-price').textContent  = price ? price + ' DT' : '-- DT';
+  }
+</script>
+{% endblock %}
