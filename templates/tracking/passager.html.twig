@@ -119,6 +119,10 @@
             <span style="color:#92400e;">Départ prévu {{ reservation.trajet.dateDepart|date('H:i') }}</span>
           </div>
         {% endif %}
+
+        <div style="margin-top:0.75rem;">
+          {{ m.badge(reservation.etatPassager == 'monte' ? 'Vous êtes à bord' : 'En attente de montée', reservation.etatPassager == 'monte' ? 'success' : 'info') }}
+        </div>
       </div>
 
       <div class="tracking-info">

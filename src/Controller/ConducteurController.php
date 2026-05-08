@@ -139,10 +139,11 @@ class ConducteurController extends AbstractController
                     $u = $this->dm->find(\App\Document\User::class, $res->getPassagerId());
                     if ($u) {
                         $passagers[] = [
+                            'reservationId' => $res->getId(),
                             'initials' => $u->getInitials(),
                             'prenom' => $u->getPrenom(),
                             'nom' => $u->getNom(),
-                            'statut' => 'en_attente' // TODO: dynamic
+                            'statut' => $res->getEtatPassager()
                         ];
                     }
                 }
@@ -322,5 +323,21 @@ class ConducteurController extends AbstractController
         }
         
         return $this->redirectToRoute('conducteur_dashboard');
+    }
+
+    #[Route('/reservation/{id}/toggle-boarded', name: 'toggle_boarded', methods: ['POST'])]
+    public function toggleBoarded(string $id): Response
+    {
+        $res = $this->dm->find(\App\Document\Reservation::class, $id);
+        if ($res) {
+            $current = $res->getEtatPassager();
+            $newStatus = ($current === 'monte') ? 'en_attente' : 'monte';
+            $res->setEtatPassager($newStatus);
+            $this->dm->flush();
+            
+            $this->addFlash('info', 'Statut du passager mis à jour.');
+        }
+
+        return $this->redirectToRoute('conducteur_tracking', ['trajetId' => $res?->getTrajetId()]);
     }
 }

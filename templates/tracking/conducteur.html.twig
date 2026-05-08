@@ -136,11 +136,16 @@
           {% for passager in passagers %}
             <div class="passenger-item">
               {{ m.avatar(passager.initials, 'sm', 'primary') }}
-              <div>
+              <div style="flex:1;">
                 <div class="p-name">{{ passager.prenom }} {{ passager.nom|slice(0, 1) }}.</div>
                 <div class="p-pickup">📍 {{ passager.pointMontee|default('Point de rendez-vous') }}</div>
               </div>
-              {{ m.badge(passager.statut == 'monte' ? 'À bord' : 'Attend', passager.statut == 'monte' ? 'success' : 'info') }}
+              
+              <form action="{{ path('conducteur_toggle_boarded', {id: passager.reservationId}) }}" method="POST" style="margin:0;">
+                <button type="submit" style="background:none; border:none; padding:0; cursor:pointer;" title="Changer le statut">
+                  {{ m.badge(passager.statut == 'monte' ? 'À bord' : 'Attend', passager.statut == 'monte' ? 'success' : 'info') }}
+                </button>
+              </form>
             </div>
           {% else %}
             <p style="color:var(--text-muted);font-size:0.88rem;">Aucun passager confirmé.</p>
