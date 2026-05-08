@@ -31,6 +31,9 @@ class Reservation
     #[MongoDB\Field(type: 'string')]
     private string $statut = 'confirmee'; // confirmeé, en_attente, terminee, annulee
 
+    #[MongoDB\Field(type: 'string')]
+    private string $etatPassager = 'en_attente'; // en_attente, monte, debarque
+
     #[MongoDB\Field(type: 'date_immutable')]
     private \DateTimeImmutable $createdAt;
 
@@ -55,6 +58,9 @@ class Reservation
 
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): self { $this->statut = $statut; return $this; }
+
+    public function getEtatPassager(): string { return $this->etatPassager; }
+    public function setEtatPassager(string $etatPassager): self { $this->etatPassager = $etatPassager; return $this; }
 
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
 }

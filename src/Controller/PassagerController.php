@@ -131,6 +131,7 @@ class PassagerController extends AbstractController
                 $data = [
                     'id' => $res->getId(),
                     'statut' => $res->getStatut(),
+                    'etatPassager' => $res->getEtatPassager(),
                     'nbPlaces' => $res->getNbPlaces(),
                     'trajet' => $trajet,
                     'conducteur' => $conducteur,
