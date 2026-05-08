@@ -29,6 +29,11 @@
   <span class="badge {{ cfg.cls }}">{{ cfg.label }}</span>
 {% endmacro %}
 
+{# ===== BADGE GÉNÉRIQUE ===== #}
+{% macro badge(text, type='grey') %}
+  <span class="badge badge-{{ type }}">{{ text }}</span>
+{% endmacro %}
+
 {# ===== ÉTOILES ===== #}
 {% macro stars(note, max=5) %}
   <span style="color:#fbbf24;">
@@ -67,7 +72,7 @@
       <div class="trajet-driver">
         <div class="driver-avatar">{{ trajet.conducteur.initials }}</div>
         <div>
-          <div class="driver-name">{{ trajet.conducteur.prenom }} {{ trajet.conducteur.nom[0] }}.</div>
+          <div class="driver-name">{{ trajet.conducteur.prenom }} {{ trajet.conducteur.nom|slice(0, 1) }}.</div>
           <div class="driver-rating">
             {% for i in 1..5 %}{{ i <= trajet.conducteur.noteMoyenne ? '★' : '☆' }}{% endfor %}
             {{ trajet.conducteur.noteMoyenne }}

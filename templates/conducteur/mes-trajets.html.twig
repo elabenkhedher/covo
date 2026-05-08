@@ -69,6 +69,10 @@
               <div class="table-actions">
                 <a href="{{ path('trajet_detail_conducteur', {id: trajet.id}) }}"
                    class="btn btn-primary btn-sm">👁️ Voir</a>
+                {% if trajet.statut == 'termine' %}
+                  <a href="{{ path('conducteur_notation') }}"
+                     class="btn btn-sm" style="background:#fef3c7;color:#92400e;">⭐ Noter</a>
+                {% endif %}
                 {% if trajet.statut == 'actif' %}
                   <a href="{{ path('trajet_modifier', {id: trajet.id}) }}"
                      class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;">✏️ Modifier</a>
