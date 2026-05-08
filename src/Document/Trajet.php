@@ -89,6 +89,20 @@ class Trajet
     #[MongoDB\Field(type: 'date_immutable')]
     private \DateTimeImmutable $updatedAt;
 
+    #[MongoDB\Field(type: 'hash')]
+    private array $currentLocation = [];
+
+    public function getCurrentLocation(): array
+    {
+        return $this->currentLocation;
+    }
+
+    public function setCurrentLocation(array $currentLocation): static
+    {
+        $this->currentLocation = $currentLocation;
+        return $this;
+    }
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();

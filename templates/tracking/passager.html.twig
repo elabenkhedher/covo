@@ -222,7 +222,7 @@
     statusText.textContent = '🟠 Reconnexion...';
   };
   {% endif %}
-
+  console.log('Mercure URL:', '{{ mercure('gps/trajet/' ~ reservation.trajet.id)|escape('js') }}');
 {% endif %}
 </script>
 {% endblock %}

@@ -35,16 +35,25 @@ class GpsController extends AbstractController
             return new JsonResponse(['error' => 'Unauthorized'], 403);
         }
 
+        // Save last known position to MongoDB
+        $trajet->setCurrentLocation([
+            'lat'       => (float) $data['lat'],
+            'lng'       => (float) $data['lng'],
+            'speed'     => (int) ($data['speed'] ?? 0),
+            'updatedAt' => time(),
+        ]);
+        $this->dm->flush();
+
+        // Also broadcast via Mercure for real-time subscribers
         $update = new Update(
             'gps/trajet/' . $data['trajetId'],
             json_encode([
                 'lat'       => (float) $data['lat'],
                 'lng'       => (float) $data['lng'],
-                'speed'     => (int) ($data['speed'] ?? 0),  // ← added
+                'speed'     => (int) ($data['speed'] ?? 0),
                 'timestamp' => time(),
             ])
         );
-
         $hub->publish($update);
 
         return new JsonResponse(['status' => 'ok']);

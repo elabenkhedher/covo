@@ -129,13 +129,14 @@ class PassagerController extends AbstractController
                     $conducteur = $this->dm->find(\App\Document\User::class, $trajet->getConducteurId());
                 }
                 $data = [
-                    'id' => $res->getId(),
-                    'statut' => $res->getStatut(),
-                    'etatPassager' => $res->getEtatPassager(),
-                    'nbPlaces' => $res->getNbPlaces(),
-                    'trajet' => $trajet,
-                    'conducteur' => $conducteur,
-                    'reservation' => $res
+                    'id'           => $res->getId(),
+                    'statut'       => $res->getStatut(),
+                    'nbPlaces'     => $res->getNbPlaces(),
+                    'trajet'       => $trajet,
+                    'conducteur'   => $conducteur,
+                    'reservation'  => $res,
+                    'lastLocation' => $trajet ? $trajet->getCurrentLocation() : [],
+                    'etatPassager' => 'en_attente', // ← add this
                 ];
             }
         }
