@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GPS Sender</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #f5f5f5;
+            gap: 20px;
+        }
+        #dot {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: orange;
+            transition: background 0.3s;
+        }
+        #dot.active { background: limegreen; }
+        #info { font-size: 14px; color: #555; text-align: center; line-height: 1.8; }
+    </style>
+</head>
+<body>
+    <div id="dot"></div>
+    <h1>GPS Tracker</h1>
+    <div id="info">Starting...</div>
+
+    <script>
+        const info = document.getElementById('info');
+        const dot  = document.getElementById('dot');
+
+        if (!navigator.geolocation) {
+            info.textContent = 'Geolocation not supported.';
+        } else {
+            navigator.geolocation.watchPosition(
+                function(pos) {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const acc = pos.coords.accuracy;
+
+                    info.innerHTML =
+                        '📍 Lat: ' + lat.toFixed(6) + '<br>' +
+                        '📍 Lng: ' + lng.toFixed(6) + '<br>' +
+                        '🎯 Accuracy: ±' + Math.round(acc) + 'm';
+
+                    dot.classList.add('active');
+
+                    fetch('/gps/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ lat, lng })
+                    }).catch(() => {
+                        info.textContent = '❌ Failed to send.';
+                        dot.classList.remove('active');
+                    });
+                },
+                function(err) {
+                    info.textContent = '❌ GPS error: ' + err.message;
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+    </script>
+</body>
+</html>

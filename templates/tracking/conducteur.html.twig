@@ -6,18 +6,11 @@
 {% block page_subtitle %}Partagez votre position avec vos passagers{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
   .tracking-layout { display: grid; grid-template-columns: 1fr 320px; gap: 0; height: calc(100vh - 80px); }
-  .map-area { background: linear-gradient(160deg, #e8f4f8 0%, #cce8d4 100%); position: relative; overflow: hidden; border-radius: var(--radius) 0 0 var(--radius); }
-  .map-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; position: relative; }
-  .map-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px); background-size: 40px 40px; }
-  .map-road-h { position: absolute; height: 8px; background: rgba(255,255,255,0.7); border-radius: 4px; left: 0; right: 0; }
-  .map-road-v { position: absolute; width: 8px; background: rgba(255,255,255,0.7); border-radius: 4px; top: 0; bottom: 0; }
-  .pin-start, .pin-end, .pin-car { position: absolute; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-  .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-  .pin-label { background: #fff; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-top: 4px; }
-  .car-icon { font-size: 2rem; animation: move 3s ease-in-out infinite; }
-  @keyframes move { 0%,100% { transform: translateX(0); } 50% { transform: translateX(8px); } }
+  .map-area { position: relative; overflow: hidden; border-radius: var(--radius) 0 0 var(--radius); }
+  #map-conducteur { width: 100%; height: 100%; }
   .tracking-panel { background: #fff; border-radius: 0 var(--radius) var(--radius) 0; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow-y: auto; }
   .tracking-panel-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
   .tracking-panel-header h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; }
@@ -51,30 +44,7 @@
 
       {# ===== MAP ===== #}
       <div class="map-area">
-        <div class="map-placeholder">
-          <div class="map-grid"></div>
-          {# Routes simulées #}
-          <div class="map-road-h" style="top:45%;"></div>
-          <div class="map-road-h" style="top:70%;"></div>
-          <div class="map-road-v" style="left:30%;"></div>
-          <div class="map-road-v" style="left:65%;"></div>
-          {# Pins #}
-          <div class="pin-start" style="bottom:15%;left:20%;">
-            <div class="pin-dot" style="background:var(--primary);"></div>
-            <div class="pin-label">{{ trajet.villeDepart }}</div>
-          </div>
-          <div class="pin-end" style="top:10%;right:15%;">
-            <div class="pin-dot" style="background:var(--accent);"></div>
-            <div class="pin-label">{{ trajet.villeArrivee }}</div>
-          </div>
-          <div class="pin-car" id="carPin" style="top:42%;left:48%;transform:translate(-50%,-50%);">
-            <div class="car-icon">🚗</div>
-          </div>
-          {# Watermark #}
-          <div style="position:absolute;bottom:1rem;right:1rem;background:rgba(255,255,255,0.8);border-radius:8px;padding:0.4rem 0.75rem;font-size:0.75rem;color:var(--text-muted);">
-            Carte simulée — intégrez Leaflet.js ou Google Maps
-          </div>
-        </div>
+        <div id="map-conducteur"></div>
       </div>
 
       {# ===== PANEL ===== #}
@@ -83,8 +53,8 @@
           <h3>{{ trajet.villeDepart }} → {{ trajet.villeArrivee }}</h3>
           {% if trajet.statut == 'en_cours' %}
             <div class="tracking-status">
-              <div class="status-dot"></div>
-              <span style="color:var(--success);">En cours · GPS actif</span>
+              <div class="status-dot" id="status-dot"></div>
+              <span style="color:var(--success);" id="status-text">En cours · GPS actif</span>
             </div>
           {% else %}
             <div class="tracking-status">
@@ -102,11 +72,11 @@
           </div>
           <div class="info-badge">
             <span>📍 Vitesse</span>
-            <strong id="speed">{{ trajet.vitesseActuelle|default('--') }} km/h</strong>
+            <strong id="speed">-- km/h</strong>
           </div>
           <div class="info-badge">
             <span>🛣️ Distance restante</span>
-            <strong>{{ trajet.distanceRestante|default('--') }} km</strong>
+            <strong id="distance">-- km</strong>
           </div>
         </div>
 
@@ -140,7 +110,6 @@
                 <div class="p-name">{{ passager.prenom }} {{ passager.nom|slice(0, 1) }}.</div>
                 <div class="p-pickup">📍 {{ passager.pointMontee|default('Point de rendez-vous') }}</div>
               </div>
-              
               <form action="{{ path('conducteur_toggle_boarded', {id: passager.reservationId}) }}" method="POST" style="margin:0;">
                 <button type="submit" style="background:none; border:none; padding:0; cursor:pointer;" title="Changer le statut">
                   {{ m.badge(passager.statut == 'monte' ? 'À bord' : 'Attend', passager.statut == 'monte' ? 'success' : 'info') }}
@@ -154,18 +123,15 @@
       </div>
 
     </div>
+
   {% else %}
     <div style="position:relative; width:100%; height:calc(100vh - 120px); min-height:500px; display:flex; align-items:center; justify-content:center; border-radius:16px; overflow:hidden; background:linear-gradient(135deg, #f0fdfa, #e0f2fe);">
-      
-      {# Animated Map Background #}
       <div style="position:absolute; inset:0; opacity:0.4; background-image:radial-gradient(#38bdf8 1px, transparent 1px); background-size:30px 30px;"></div>
       <div style="position:absolute; top:20%; left:-10%; width:150px; height:2px; background:linear-gradient(90deg, transparent, var(--accent), transparent); animation: sweep 4s infinite linear;"></div>
       <div style="position:absolute; top:60%; right:-10%; width:150px; height:2px; background:linear-gradient(90deg, transparent, var(--primary), transparent); animation: sweep 5s infinite linear reverse;"></div>
       <div style="position:absolute; top:40%; left:40%; width:40px; height:40px; border-radius:50%; border:2px solid rgba(56, 189, 248, 0.5); animation: pulse-ring 2s infinite ease-out;"></div>
-      
-      {# Glassmorphism Card #}
-      <div style="position:relative; z-index:10; background:rgba(255, 255, 255, 0.7); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); padding:3rem; border-radius:24px; border:1px solid rgba(255, 255, 255, 0.5); box-shadow:0 20px 40px rgba(0,0,0,0.05); max-width:500px; text-align:center; transform:translateY(0); transition:transform 0.3s ease;">
-        <div style="width:80px; height:80px; margin:0 auto 1.5rem; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 20px rgba(14, 165, 233, 0.15); animation: float 3s ease-in-out infinite;">
+      <div style="position:relative; z-index:10; background:rgba(255,255,255,0.7); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); padding:3rem; border-radius:24px; border:1px solid rgba(255,255,255,0.5); box-shadow:0 20px 40px rgba(0,0,0,0.05); max-width:500px; text-align:center;">
+        <div style="width:80px; height:80px; margin:0 auto 1.5rem; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 20px rgba(14,165,233,0.15); animation: float 3s ease-in-out infinite;">
           <span style="font-size:2.5rem;">📍</span>
         </div>
         <h2 style="font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; color:var(--text); margin-bottom:1rem;">Où allons-nous ?</h2>
@@ -173,56 +139,110 @@
           Le radar est en veille. Pour activer le suivi GPS en temps réel et partager votre position, démarrez un trajet depuis votre tableau de bord.
         </p>
         <div style="display:flex; gap:1rem; justify-content:center;">
-          <a href="{{ path('conducteur_dashboard') }}" class="btn btn-outline" style="border-radius:50px; padding:0.75rem 1.5rem;">
-            🏠 Tableau de bord
-          </a>
-          <a href="{{ path('trajet_mes_trajets') }}" class="btn btn-primary" style="border-radius:50px; padding:0.75rem 1.5rem; box-shadow:0 10px 20px rgba(14, 165, 233, 0.2);">
-            🚗 Mes trajets
-          </a>
+          <a href="{{ path('conducteur_dashboard') }}" class="btn btn-outline" style="border-radius:50px; padding:0.75rem 1.5rem;">🏠 Tableau de bord</a>
+          <a href="{{ path('trajet_mes_trajets') }}" class="btn btn-primary" style="border-radius:50px; padding:0.75rem 1.5rem; box-shadow:0 10px 20px rgba(14,165,233,0.2);">🚗 Mes trajets</a>
         </div>
       </div>
-      
       <style>
         @keyframes sweep { 0% { transform:translateX(0); opacity:0; } 50% { opacity:1; } 100% { transform:translateX(100vw); opacity:0; } }
         @keyframes pulse-ring { 0% { transform:scale(0.8); opacity:1; } 100% { transform:scale(2.5); opacity:0; } }
         @keyframes float { 0% { transform:translateY(0); } 50% { transform:translateY(-10px); } 100% { transform:translateY(0); } }
       </style>
     </div>
-
   {% endif %}
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  {# Connexion WebSocket pour position GPS en temps réel #}
-  {% if trajet|default(null) and trajet.statut == 'en_cours' %}
-  const ws = new WebSocket('{{ websocket_url|default("ws://localhost:3001") }}');
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'conductor_connect', trajetId: '{{ trajet.id }}' }));
-  };
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === 'eta_update') {
-      document.getElementById('eta').textContent = data.eta;
-      document.getElementById('speed').textContent = data.speed + ' km/h';
-    }
-  };
-  {# Envoi de la position GPS toutes les 3 secondes #}
+{% if trajet|default(null) %}
+
+  // Init map
+  {% if trajet.coordDepart is not empty %}
+    const initLat = {{ trajet.coordDepart.coordinates[1] }};
+    const initLng = {{ trajet.coordDepart.coordinates[0] }};
+  {% else %}
+    const initLat = 36.8;
+    const initLng = 10.1;
+  {% endif %}
+
+  const map = L.map('map-conducteur').setView([initLat, initLng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  // Departure marker
+  {% if trajet.coordDepart is not empty %}
+  L.marker([{{ trajet.coordDepart.coordinates[1] }}, {{ trajet.coordDepart.coordinates[0] }}], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div style="background:#22c55e;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
+      iconSize: [14,14], iconAnchor: [7,7]
+    })
+  }).addTo(map).bindPopup('{{ trajet.villeDepart }}');
+  {% endif %}
+
+  // Arrival marker
+  {% if trajet.coordArrivee is not empty %}
+  L.marker([{{ trajet.coordArrivee.coordinates[1] }}, {{ trajet.coordArrivee.coordinates[0] }}], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
+      iconSize: [14,14], iconAnchor: [7,7]
+    })
+  }).addTo(map).bindPopup('{{ trajet.villeArrivee }}');
+  {% endif %}
+
+  // My position marker (blue car)
+  const myMarker = L.marker([initLat, initLng], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div style="font-size:1.6rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">🚗</div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    })
+  }).addTo(map).bindPopup('Ma position');
+
+  {% if trajet.statut == 'en_cours' %}
+  const TRAJET_ID = '{{ trajet.id }}';
+  const statusDot  = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+
   if (navigator.geolocation) {
     setInterval(() => {
       navigator.geolocation.getCurrentPosition(pos => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'gps_update',
-            trajetId: '{{ trajet.id }}',
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            speed: pos.coords.speed || 0
-          }));
-        }
-      });
+        const lat   = pos.coords.latitude;
+        const lng   = pos.coords.longitude;
+        const speed = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
+
+        // Move marker and pan map
+        myMarker.setLatLng([lat, lng]);
+        map.panTo([lat, lng]);
+
+        // Update panel
+        document.getElementById('speed').textContent = speed + ' km/h';
+        statusText.textContent = '✅ GPS actif · ' + new Date().toLocaleTimeString();
+
+        // Send to Symfony → Mercure
+        fetch('/gps/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat, lng, speed, trajetId: TRAJET_ID })
+        }).catch(() => {
+          statusDot.style.background  = '#fbbf24';
+          statusText.textContent = '⚠️ Erreur envoi GPS';
+        });
+
+      }, err => {
+        statusDot.style.background = '#ef4444';
+        statusText.textContent = '❌ GPS: ' + err.message;
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
     }, 3000);
+  } else {
+    statusText.textContent = '❌ GPS non supporté';
   }
   {% endif %}
+
+{% endif %}
 </script>
 {% endblock %}

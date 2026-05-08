@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>GPS Live Tracker</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        #map { height: 100vh; width: 100%; }
+        #status {
+            position: fixed;
+            top: 16px; left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-size: 14px;
+            z-index: 1000;
+        }
+        #status.connected { color: green; }
+        #status.waiting   { color: orange; }
+    </style>
+</head>
+<body>
+    <div id="status" class="waiting">⏳ Waiting for GPS signal...</div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([36.8, 10.1], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = L.marker([36.8, 10.1]).addTo(map);
+        const status = document.getElementById('status');
+
+        const mercureUrl = new URL('{{ mercure('gps/location')|escape('js') }}');
+        const eventSource = new EventSource(mercureUrl);
+
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const latlng = [data.lat, data.lng];
+            marker.setLatLng(latlng);
+            map.panTo(latlng);
+            const time = new Date(data.timestamp * 1000).toLocaleTimeString();
+            status.textContent = '✅ Live — last update: ' + time;
+            status.className = 'connected';
+        };
+
+        eventSource.onerror = function() {
+            status.textContent = '❌ Connection lost. Retrying...';
+            status.className = 'waiting';
+        };
+    </script>
+</body>
+</html>
