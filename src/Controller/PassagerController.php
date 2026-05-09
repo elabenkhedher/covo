@@ -119,6 +119,7 @@ class PassagerController extends AbstractController
     {
         $reservationId = $request->query->get('reservationId');
         $data = null;
+        $trajet = null;
 
         if ($reservationId) {
             $res = $this->dm->find(\App\Document\Reservation::class, $reservationId);
@@ -136,13 +137,14 @@ class PassagerController extends AbstractController
                     'conducteur'   => $conducteur,
                     'reservation'  => $res,
                     'lastLocation' => $trajet ? $trajet->getCurrentLocation() : [],
-                    'etatPassager' => 'en_attente', // ← add this
+                    'etatPassager' => 'en_attente',
                 ];
             }
         }
 
         return $this->render('tracking/passager.html.twig', [
-            'reservation' => $data
+            'reservation' => $data,
+            'trajet'      => $trajet,   // ← the fix
         ]);
     }
 

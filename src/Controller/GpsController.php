@@ -58,4 +58,23 @@ class GpsController extends AbstractController
 
         return new JsonResponse(['status' => 'ok']);
     }
+
+    #[Route('/gps/location/{trajetId}', name: 'gps_location', methods: ['GET'])]
+    public function location(string $trajetId, DocumentManager $dm): JsonResponse
+    {
+        $trajet = $dm->find(Trajet::class, $trajetId);
+        if (!$trajet) {
+            return $this->json(['error' => 'Not found'], 404);
+        }
+
+        $loc = $trajet->getCurrentLocation();
+
+        return $this->json([
+            'lat'      => $loc['lat']      ?? null,
+            'lng'      => $loc['lng']      ?? null,
+            'speed'    => $loc['speed']    ?? null,
+            'distance' => $loc['distance'] ?? null,
+            'eta'      => $loc['eta']      ?? null,
+        ]);
+    }
 }

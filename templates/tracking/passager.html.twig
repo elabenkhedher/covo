@@ -141,88 +141,118 @@
 
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-{% if reservation|default(null) and reservation.trajet|default(null) %}
 
-  // Init map
-  {% if reservation.trajet.coordDepart is not empty %}
-    const initLat = {{ reservation.trajet.coordDepart.coordinates[1] }};
-    const initLng = {{ reservation.trajet.coordDepart.coordinates[0] }};
+<script>
+{% if reservation is not null and trajet is not null %}
+
+  {# ── Initial position: live currentLocation from DB, fallback to departure coords ── #}
+  {% set loc = trajet.currentLocation %}
+
+  {% if loc.lat is defined and loc.lng is defined %}
+    const initLat = {{ loc.lat }};
+    const initLng = {{ loc.lng }};
+    const hasLiveLocation = true;
+  {% elseif trajet.coordDepart is not empty %}
+    const initLat = {{ trajet.coordDepart.coordinates[1] }};
+    const initLng = {{ trajet.coordDepart.coordinates[0] }};
+    const hasLiveLocation = false;
   {% else %}
     const initLat = 36.8;
     const initLng = 10.1;
+    const hasLiveLocation = false;
   {% endif %}
 
+  const TRAJET_ID  = '{{ trajet.id }}';
+  const TRAJET_STATUT = '{{ trajet.statut }}';
+
+  {# ── Map init ── #}
   const map = L.map('map-passager').setView([initLat, initLng], 13);
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // Departure marker (green)
-  {% if reservation.trajet.coordDepart is not empty %}
-  L.marker([{{ reservation.trajet.coordDepart.coordinates[1] }}, {{ reservation.trajet.coordDepart.coordinates[0] }}], {
+  window.addEventListener('load', () => map.invalidateSize());
+  setTimeout(() => map.invalidateSize(), 300);
+
+  {# ── Static markers: departure & arrival ── #}
+  {% if trajet.coordDepart is not empty %}
+  L.marker([{{ trajet.coordDepart.coordinates[1] }}, {{ trajet.coordDepart.coordinates[0] }}], {
     icon: L.divIcon({
       className: '',
       html: '<div style="background:#22c55e;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
       iconSize: [14,14], iconAnchor: [7,7]
     })
-  }).addTo(map).bindPopup('{{ reservation.trajet.villeDepart }}');
+  }).addTo(map).bindPopup('{{ trajet.villeDepart }}');
   {% endif %}
 
-  // Arrival marker (red)
-  {% if reservation.trajet.coordArrivee is not empty %}
-  L.marker([{{ reservation.trajet.coordArrivee.coordinates[1] }}, {{ reservation.trajet.coordArrivee.coordinates[0] }}], {
+  {% if trajet.coordArrivee is not empty %}
+  L.marker([{{ trajet.coordArrivee.coordinates[1] }}, {{ trajet.coordArrivee.coordinates[0] }}], {
     icon: L.divIcon({
       className: '',
       html: '<div style="background:#ef4444;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
       iconSize: [14,14], iconAnchor: [7,7]
     })
-  }).addTo(map).bindPopup('{{ reservation.trajet.villeArrivee }}');
+  }).addTo(map).bindPopup('{{ trajet.villeArrivee }}');
   {% endif %}
 
-  // Conductor marker (car emoji, moves in real time)
+  {# ── Driver marker at current (or departure) position ── #}
   const conducteurMarker = L.marker([initLat, initLng], {
     icon: L.divIcon({
       className: '',
-      html: '<div style="font-size:1.8rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))">🚗</div>',
-      iconSize: [28,28],
-      iconAnchor: [14,14]
+      html: '<div style="font-size:1.8rem">🚗</div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
     })
-  }).addTo(map).bindPopup('Conducteur');
+  }).addTo(map);
 
-  {% if reservation.trajet.statut == 'en_cours' %}
-  const statusDot  = document.getElementById('status-dot');
+  if (hasLiveLocation) {
+    conducteurMarker.bindPopup('Dernière position connue').openPopup();
+  }
+
+  {# ── Polling: fetch /gps/location/{trajetId} every 4 s when trip is en_cours ── #}
+  {% if trajet.statut == 'en_cours' %}
+
   const statusText = document.getElementById('status-text');
+  const statusDot  = document.getElementById('status-dot');
 
-  // Subscribe to Mercure topic for this specific trip
-  const mercureUrl = new URL('{{ mercure('gps/trajet/' ~ reservation.trajet.id)|escape('js') }}');
-  const es = new EventSource(mercureUrl);
+  async function fetchLocation() {
+    try {
+      const res  = await fetch('/gps/location/' + TRAJET_ID);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
 
-  es.onmessage = function(event) {
-    const data = JSON.parse(event.data);
+      if (data.lat && data.lng) {
+        conducteurMarker.setLatLng([data.lat, data.lng]);
+        map.panTo([data.lat, data.lng]);
 
-    // Move car marker on real map
-    conducteurMarker.setLatLng([data.lat, data.lng]);
-    map.panTo([data.lat, data.lng]);
+        if (data.speed !== undefined) {
+          document.getElementById('speed').textContent = data.speed + ' km/h';
+        }
+        if (data.distance !== undefined) {
+          document.getElementById('distance').textContent = data.distance + ' km';
+        }
+        if (data.eta !== undefined) {
+          document.getElementById('eta').textContent = data.eta;
+        }
 
-    // Update panel info
-    document.getElementById('speed').textContent    = (data.speed || 0) + ' km/h';
-    document.getElementById('distance').textContent = (data.distance || '--') + ' km';
-    document.getElementById('eta').textContent      = data.eta || '--:--';
+        statusDot.style.background = 'var(--success)';
+        statusText.textContent = '✅ Mis à jour à ' + new Date().toLocaleTimeString();
+      } else {
+        statusText.textContent = '⏳ Position non encore disponible';
+      }
+    } catch (e) {
+      statusDot.style.background = '#ef4444';
+      statusText.textContent = '❌ Erreur de connexion GPS';
+      console.error('GPS poll error:', e);
+    }
+  }
 
-    // Update status
-    statusDot.style.background  = 'var(--success)';
-    statusDot.style.animation   = 'pulse 1.5s infinite';
-    statusText.textContent = '🟢 En direct · ' + new Date(data.timestamp * 1000).toLocaleTimeString();
-  };
+  fetchLocation();                        // immediate first call
+  setInterval(fetchLocation, 4000);       // then every 4 s
 
-  es.onerror = function() {
-    statusDot.style.background = '#fbbf24';
-    statusDot.style.animation  = 'none';
-    statusText.textContent = '🟠 Reconnexion...';
-  };
   {% endif %}
-  console.log('Mercure URL:', '{{ mercure('gps/trajet/' ~ reservation.trajet.id)|escape('js') }}');
+
 {% endif %}
 </script>
 {% endblock %}
