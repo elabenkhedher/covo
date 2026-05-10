@@ -1,5 +1,5 @@
 <?php
-namespace App\Controller;
+namespace App\Controller\Admin;
 
 use App\Document\User;
 use App\Repository\UserRepository;
@@ -36,10 +36,16 @@ class AdminController extends AbstractController
     }
 
     #[Route('/users/{id}/valider', name: 'admin_user_valider', methods: ['POST'])]
-    public function valider(string $id): Response
+    public function valider(string $id, Request $request): Response
     {
         $user = $this->dm->find(User::class, $id);
         if (!$user) throw $this->createNotFoundException();
+
+        if (!$this->isCsrfTokenValid('valider_' . $id, $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users');
+        }
+
         $user->setStatut('actif');
         $this->dm->flush();
         $this->addFlash('success', "Compte de {$user->getFullName()} validé.");
@@ -47,10 +53,16 @@ class AdminController extends AbstractController
     }
 
     #[Route('/users/{id}/toggle-suspension', name: 'admin_user_toggle_suspension', methods: ['POST'])]
-    public function toggleSuspension(string $id): Response
+    public function toggleSuspension(string $id, Request $request): Response
     {
         $user = $this->dm->find(User::class, $id);
         if (!$user) throw $this->createNotFoundException();
+
+        if (!$this->isCsrfTokenValid('suspend_' . $id, $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users');
+        }
+
         if ($user === $this->getUser()) {
             $this->addFlash('error', 'Impossible de suspendre votre propre compte.');
             return $this->redirectToRoute('admin_users');
@@ -98,4 +110,4 @@ class AdminController extends AbstractController
         ]);
     }
 }
-?>
+

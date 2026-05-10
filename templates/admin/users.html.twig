@@ -136,13 +136,6 @@
 </style>
 {% endblock %}
 
-{% block sidebar_nav %}
-  <div class="nav-section">Administration</div>
-  <a href="{{ path('admin_users') }}"
-     class="{{ app.request.attributes.get('_route') starts with 'admin_' ? 'active' : '' }}">
-    <span class="icon">👥</span> Utilisateurs
-  </a>
-{% endblock %}
 
 {% block body %}
 

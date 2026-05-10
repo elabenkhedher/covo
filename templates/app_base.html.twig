@@ -39,6 +39,10 @@
       <nav class="sidebar-nav">
         {% if is_granted('ROLE_ADMIN') %}
           <div class="nav-section">Administration</div>
+          <a href="{{ path('admin_users') }}"
+             class="{{ app.request.attributes.get('_route') starts with 'admin_user' ? 'active' : '' }}">
+            <span class="icon">👥</span> Utilisateurs
+          </a>
           <a href="{{ path('admin_trajet_index') }}"
              class="{{ app.request.attributes.get('_route') starts with 'admin_trajet' ? 'active' : '' }}">
             <span class="icon">🛡️</span> Trajets
@@ -49,9 +53,7 @@
           {% block sidebar_nav_passager %}{% endblock %}
         {% endif %}
 
-        {% if not is_granted('ROLE_ADMIN') %}
-          {% block sidebar_nav %}{% endblock %}
-        {% endif %}
+        {% block sidebar_nav %}{% endblock %}
 
         <div class="nav-section">Compte</div>
         {% if app.user %}
