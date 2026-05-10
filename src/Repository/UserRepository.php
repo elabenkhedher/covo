@@ -32,4 +32,27 @@ class UserRepository extends ServiceDocumentRepository implements PasswordUpgrad
         $this->getDocumentManager()->persist($user);
         $this->getDocumentManager()->flush();
     }
+    public function findWithFilters(?string $role = null, ?string $statut = null): array
+    {
+        $qb = $this->createQueryBuilder();
+        if ($role) {
+            $map = ['conducteur' => 'ROLE_CONDUCTEUR', 'passager' => 'ROLE_PASSAGER', 'admin' => 'ROLE_ADMIN'];
+            if (isset($map[$role])) { $qb->field('roles')->equals($map[$role]); }
+        }
+        if ($statut) { $qb->field('statut')->equals($statut); }
+        return $qb->sort('nom', 'asc')->getQuery()->execute()->toArray();
+    }
+
+    public function countTrajetsForUser(string $userId): int
+    {
+        $col = $this->getDocumentManager()->getDocumentCollection(\App\Document\Trajet::class);
+        return (int) $col->countDocuments(['conducteurId' => $userId]);
+    }
+
+    public function countReservationsForUser(string $userId): int
+    {
+        $col = $this->getDocumentManager()->getDocumentCollection(\App\Document\Reservation::class);
+        return (int) $col->countDocuments(['passagerId' => $userId]);
+    }
 }
+

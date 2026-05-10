@@ -6,6 +6,7 @@ use App\Document\User;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use Symfony\Component\Security\Core\Exception\DisabledException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -28,6 +29,11 @@ class MongoDBUserProvider implements UserProviderInterface, PasswordUpgraderInte
             throw $exception;
         }
 
+        if ($user->getStatut() === 'suspendu') {
+            throw new \Symfony\Component\Security\Core\Exception\DisabledException(
+                'Votre compte a été suspendu. Contactez un administrateur.'
+            );
+        }
         return $user;
     }
 

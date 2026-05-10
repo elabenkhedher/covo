@@ -1,0 +1,321 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}Administration — Utilisateurs{% endblock %}
+{% block page_title %}Gestion des utilisateurs{% endblock %}
+{% block page_subtitle %}Modération et supervision des comptes{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Filtres ── */
+  .filter-bar {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .filter-bar select {
+    padding: .45rem .75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: .9rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .filter-bar label { font-size: .85rem; color: var(--text-muted); font-weight: 600; }
+
+  /* ── Table ── */
+  .table-wrapper {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .table-header strong { font-size: 1rem; }
+  .count-badge {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: .2rem .65rem;
+    font-size: .82rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left;
+    padding: .65rem 1rem;
+    background: var(--bg);
+    font-size: .78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td {
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    font-size: .9rem;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: #fafbff; }
+
+  /* ── Identité ── */
+  .user-cell { display: flex; align-items: center; gap: .75rem; }
+  .user-info-name  { font-weight: 700; color: var(--text); line-height: 1.2; }
+  .user-info-email { font-size: .8rem; color: var(--text-muted); }
+
+  /* ── Badges statut compte ── */
+  .badge-actif      { background: #dcfce7; color: #15803d; }
+  .badge-suspendu   { background: #fee2e2; color: #b91c1c; }
+  .badge-en_attente { background: #fef9c3; color: #a16207; }
+
+  /* ── Boutons action ── */
+  .actions { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .btn-xs {
+    padding: .28rem .6rem;
+    border-radius: 6px;
+    border: none;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .2rem;
+    font-family: inherit;
+    transition: opacity .15s;
+  }
+  .btn-xs:hover { opacity: .8; }
+  .btn-xs.valider    { background: #dcfce7; color: #15803d; }
+  .btn-xs.suspendre  { background: #fef9c3; color: #a16207; }
+  .btn-xs.reactiver  { background: #dbeafe; color: #1d4ed8; }
+  .btn-xs.supprimer  { background: #fee2e2; color: #b91c1c; }
+  .btn-xs.historique { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 25px 60px rgba(0,0,0,.2);
+  }
+  .modal h3 { margin: 0 0 .6rem; font-size: 1.1rem; }
+  .modal p  { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.5rem; line-height: 1.5; }
+  .modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-section">Administration</div>
+  <a href="{{ path('admin_users') }}"
+     class="{{ app.request.attributes.get('_route') starts with 'admin_' ? 'active' : '' }}">
+    <span class="icon">👥</span> Utilisateurs
+  </a>
+{% endblock %}
+
+{% block body %}
+
+{# ── Filtres ── #}
+<form class="filter-bar" method="get" action="{{ path('admin_users') }}">
+  <label>Rôle :</label>
+  <select name="role" onchange="this.form.submit()">
+    <option value="">Tous</option>
+    <option value="conducteur" {{ filter_role == 'conducteur' ? 'selected' }}>🚗 Conducteur</option>
+    <option value="passager"   {{ filter_role == 'passager'   ? 'selected' }}>🧍 Passager</option>
+    <option value="admin"      {{ filter_role == 'admin'      ? 'selected' }}>🛡️ Admin</option>
+  </select>
+
+  <label style="margin-left:.5rem;">Statut :</label>
+  <select name="statut" onchange="this.form.submit()">
+    <option value="">Tous</option>
+    <option value="actif"      {{ filter_statut == 'actif'      ? 'selected' }}>✅ Actif</option>
+    <option value="suspendu"   {{ filter_statut == 'suspendu'   ? 'selected' }}>🚫 Suspendu</option>
+    <option value="en_attente" {{ filter_statut == 'en_attente' ? 'selected' }}>⏳ En attente</option>
+  </select>
+
+  {% if filter_role or filter_statut %}
+    <a href="{{ path('admin_users') }}" class="btn-xs historique" style="margin-left:auto;">✕ Réinitialiser</a>
+  {% endif %}
+</form>
+
+{# ── Table ── #}
+<div class="table-wrapper">
+  <div class="table-header">
+    <strong>👥 Liste des utilisateurs</strong>
+    <span class="count-badge">{{ users|length }} résultat(s)</span>
+  </div>
+
+  {% if users is empty %}
+    {{ m.empty_state('🔍', 'Aucun utilisateur trouvé', 'Essayez de modifier les filtres.') }}
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Utilisateur</th>
+        <th>Rôle</th>
+        <th>Statut</th>
+        <th>Note</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+
+        {# Identité #}
+        <td>
+          <div class="user-cell">
+            {{ m.avatar(user.initials, 'sm', 'accent') }}
+            <div>
+              <div class="user-info-name">{{ user.fullName }}</div>
+              <div class="user-info-email">{{ user.email }}</div>
+            </div>
+          </div>
+        </td>
+
+        {# Rôle #}
+        <td>
+          {% if 'ROLE_ADMIN' in user.roles %}
+            {{ m.badge('🛡️ Admin', 'info') }}
+          {% elseif 'ROLE_CONDUCTEUR' in user.roles %}
+            {{ m.badge('🚗 Conducteur', 'success') }}
+          {% else %}
+            {{ m.badge('🧍 Passager', 'grey') }}
+          {% endif %}
+        </td>
+
+        {# Statut compte #}
+        <td>
+          <span class="badge badge-{{ user.statut }}">
+            {% if user.statut == 'actif' %}✅ Actif
+            {% elseif user.statut == 'suspendu' %}🚫 Suspendu
+            {% else %}⏳ En attente
+            {% endif %}
+          </span>
+        </td>
+
+        {# Note #}
+        <td>
+          {% if user.nbNotations > 0 %}
+            {{ m.stars(user.noteMoyenne) }}
+          {% else %}
+            <span style="color:var(--text-muted);">—</span>
+          {% endif %}
+        </td>
+
+        {# Actions #}
+        <td>
+          <div class="actions">
+
+            {# Valider conducteur en attente #}
+            {% if user.statut == 'en_attente' and 'ROLE_CONDUCTEUR' in user.roles %}
+              <form method="post" action="{{ path('admin_user_valider', {id: user.id}) }}" style="display:inline;">
+                <input type="hidden" name="_token" value="{{ csrf_token('valider_' ~ user.id) }}">
+                <button type="submit" class="btn-xs valider">✅ Valider</button>
+              </form>
+            {% endif %}
+
+            {# Suspendre / Réactiver #}
+            {% if user.id != app.user.id %}
+              <form method="post" action="{{ path('admin_user_toggle_suspension', {id: user.id}) }}" style="display:inline;">
+                <input type="hidden" name="_token" value="{{ csrf_token('suspend_' ~ user.id) }}">
+                {% if user.statut == 'suspendu' %}
+                  <button type="submit" class="btn-xs reactiver">▶️ Réactiver</button>
+                {% else %}
+                  <button type="submit" class="btn-xs suspendre">⏸️ Suspendre</button>
+                {% endif %}
+              </form>
+            {% endif %}
+
+            {# Historique #}
+            <a href="{{ path('admin_user_historique', {id: user.id}) }}" class="btn-xs historique">
+              📊 Historique
+            </a>
+
+            {# Supprimer — ouvre modal avec token CSRF passé en JS #}
+            {% if user.id != app.user.id %}
+              <button type="button"
+                      class="btn-xs supprimer"
+                      onclick="openDeleteModal(
+                        '{{ user.id }}',
+                        '{{ user.fullName|e('js') }}',
+                        '{{ csrf_token('delete_user_' ~ user.id) }}'
+                      )">
+                🗑️ Supprimer
+              </button>
+            {% endif %}
+
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+
+{# ── Modal suppression ── #}
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>🗑️ Supprimer ce compte ?</h3>
+    <p id="deleteModalText">Cette action est irréversible.</p>
+    <form method="post" id="deleteForm">
+      <input type="hidden" name="_token" id="deleteToken">
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeDeleteModal()">Annuler</button>
+        <button type="submit" class="btn btn-danger">Confirmer la suppression</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openDeleteModal(id, name, token) {
+  document.getElementById('deleteModalText').textContent =
+    'Supprimer définitivement le compte de ' + name + ' ? Cette action est irréversible.';
+  document.getElementById('deleteForm').action = '/admin/users/' + id + '/supprimer';
+  document.getElementById('deleteToken').value = token;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('open');
+}
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDeleteModal();
+});
+</script>
+{% endblock %}

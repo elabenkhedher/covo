@@ -1,0 +1,185 @@
+{% extends 'app_base.html.twig' %}
+{% import '_macros.html.twig' as m %}
+
+{% block title %}Historique — {{ user.fullName }}{% endblock %}
+{% block page_title %}Historique utilisateur{% endblock %}
+{% block page_subtitle %}{{ user.fullName }} — {{ user.email }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+  .stat-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; flex-shrink: 0;
+  }
+  .stat-icon.blue   { background: #e0f2fe; color: #0284c7; }
+  .stat-icon.green  { background: #dcfce7; color: #16a34a; }
+  .stat-icon.yellow { background: #fef9c3; color: #a16207; }
+  .stat-icon.purple { background: #ede9fe; color: #7c3aed; }
+  .stat-label { color: var(--text-muted); font-size: .85rem; margin-bottom: .2rem; font-weight: 500; }
+  .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+
+  .info-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .info-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: .95rem;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .8rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    font-size: .9rem;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--text-muted); font-weight: 500; }
+
+  .badge-actif      { background: #dcfce7; color: #15803d; }
+  .badge-suspendu   { background: #fee2e2; color: #b91c1c; }
+  .badge-en_attente { background: #fef9c3; color: #a16207; }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+  <div class="nav-section">Administration</div>
+  <a href="{{ path('admin_users') }}">
+    <span class="icon">👥</span> Utilisateurs
+  </a>
+{% endblock %}
+
+{% block page_header_actions %}
+  <a href="{{ path('admin_users') }}" class="btn btn-outline btn-sm" style="margin-left:auto;">
+    ← Retour à la liste
+  </a>
+{% endblock %}
+
+{% block body %}
+
+{# ── Avatar + identité ── #}
+<div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;
+            background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+            padding:1.25rem;box-shadow:var(--shadow);">
+  {{ m.avatar(user.initials, 'lg', 'accent') }}
+  <div>
+    <div style="font-size:1.2rem;font-weight:800;">{{ user.fullName }}</div>
+    <div style="color:var(--text-muted);font-size:.9rem;">{{ user.email }}</div>
+    <div style="margin-top:.4rem;">
+      {% if 'ROLE_ADMIN' in user.roles %}
+        {{ m.badge('🛡️ Admin', 'info') }}
+      {% elseif 'ROLE_CONDUCTEUR' in user.roles %}
+        {{ m.badge('🚗 Conducteur', 'success') }}
+      {% else %}
+        {{ m.badge('🧍 Passager', 'grey') }}
+      {% endif %}
+      &nbsp;
+      <span class="badge badge-{{ user.statut }}">
+        {% if user.statut == 'actif' %}✅ Actif
+        {% elseif user.statut == 'suspendu' %}🚫 Suspendu
+        {% else %}⏳ En attente{% endif %}
+      </span>
+    </div>
+  </div>
+</div>
+
+{# ── Stats ── #}
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon blue">🚗</div>
+    <div>
+      <div class="stat-value">{{ nb_trajets }}</div>
+      <div class="stat-label">Trajets publiés</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green">🎫</div>
+    <div>
+      <div class="stat-value">{{ nb_reservations }}</div>
+      <div class="stat-label">Réservations</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon yellow">⭐</div>
+    <div>
+      <div class="stat-value">
+        {% if user.nbNotations > 0 %}{{ user.noteMoyenne|number_format(1) }}{% else %}—{% endif %}
+      </div>
+      <div class="stat-label">Note moyenne</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon purple">📝</div>
+    <div>
+      <div class="stat-value">{{ user.nbNotations }}</div>
+      <div class="stat-label">Avis reçus</div>
+    </div>
+  </div>
+</div>
+
+{# ── Infos compte ── #}
+<div class="info-card">
+  <div class="info-card-header">ℹ️ Informations du compte</div>
+  <div class="info-row">
+    <span class="info-label">Téléphone</span>
+    <span>{{ user.telephone ?? '—' }}</span>
+  </div>
+  {% if user.bio %}
+  <div class="info-row">
+    <span class="info-label">Bio</span>
+    <span style="max-width:60%;text-align:right;color:var(--text-muted);">{{ user.bio }}</span>
+  </div>
+  {% endif %}
+  {% if 'ROLE_CONDUCTEUR' in user.roles %}
+  <div class="info-row">
+    <span class="info-label">Véhicule</span>
+    <span>{{ user.marqueVehicule ?? '—' }} {{ user.couleur ?? '' }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Immatriculation</span>
+    <span>{{ user.immatriculation ?? '—' }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Places véhicule</span>
+    <span>{{ user.nbPlacesVehicule ?? '—' }}</span>
+  </div>
+  {% endif %}
+  <div class="info-row">
+    <span class="info-label">Préférences</span>
+    <span>
+      {% if user.prefNonFumeur %}🚭 Non-fumeur&nbsp;{% endif %}
+      {% if user.prefMusique %}🎵 Musique&nbsp;{% endif %}
+      {% if user.prefAnimaux %}🐾 Animaux&nbsp;{% endif %}
+      {% if user.prefDiscussion %}💬 Discussion&nbsp;{% endif %}
+      {% if not user.prefNonFumeur and not user.prefMusique and not user.prefAnimaux and not user.prefDiscussion %}
+        <span style="color:var(--text-muted);">Aucune</span>
+      {% endif %}
+    </span>
+  </div>
+</div>
+
+{% endblock %}

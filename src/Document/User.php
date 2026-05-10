@@ -56,6 +56,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[MongoDB\Field(type: 'string', nullable: true)]
     private ?string $bio = null;
 
+    #[MongoDB\Field(type: 'string')]
+    private string $statut = 'actif';
+
     /** Note moyenne reçue (calculée lors de chaque nouvelle notation) */
     #[MongoDB\Field(type: 'float')]
     private float $noteMoyenne = 0.0;
@@ -163,6 +166,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getBio(): ?string { return $this->bio; }
     public function setBio(?string $bio): self { $this->bio = $bio; return $this; }
+
+    public function getStatut(): string { return $this->statut; }
+    public function setStatut(string $statut): self { $this->statut = $statut; return $this; }
 
     public function isPrefNonFumeur(): bool { return $this->prefNonFumeur; }
     public function setPrefNonFumeur(bool $prefNonFumeur): self { $this->prefNonFumeur = $prefNonFumeur; return $this; }
