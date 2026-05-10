@@ -2,160 +2,163 @@
 
 {% block title %}Détail Trajet #{{ trajet.id|slice(0, 8) }}{% endblock %}
 {% block page_title %}Modération : Détail du trajet{% endblock %}
-{% block page_subtitle %}ID : {{ trajet.id }}{% endblock %}
+{% block page_subtitle %}<div style="margin-bottom: 1.5rem;">ID : {{ trajet.id }}</div>{% endblock %}
 
 {% block page_header_actions %}
     <a href="{{ path('admin_trajet_index') }}" class="btn btn-outline">⬅️ Retour à la liste</a>
 {% endblock %}
 
-{% block sidebar_nav %}
-    <div class="nav-section">Administration</div>
-    <a href="{{ path('admin_trajet_index') }}" class="active">
-        <span class="icon">🛡️</span> Trajets
-    </a>
-{% endblock %}
 
 {% block body %}
-<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem;">
+<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; margin-top: 1.5rem;">
     
     {# --- COLONNE GAUCHE : INFOS TRAJET --- #}
     <div>
-        <div class="card" style="margin-bottom: 1.5rem;">
-            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Détails du voyage</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted);">Ville de départ</label>
-                    <strong>{{ trajet.villeDepart }}</strong>
+        <div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
+            <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">Détails du voyage</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Ville de départ</label>
+                    <div style="padding: 0.25rem 0; font-weight: bold;">{{ trajet.villeDepart }}</div>
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted);">Ville d'arrivée</label>
-                    <strong>{{ trajet.villeArrivee }}</strong>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Ville d'arrivée</label>
+                    <div style="padding: 0.25rem 0; font-weight: bold;">{{ trajet.villeArrivee }}</div>
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted);">Point de rendez-vous</label>
-                    <p>{{ trajet.pointRendezVous|default('Non spécifié') }}</p>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Point de rendez-vous</label>
+                    <div style="padding: 0.25rem 0;">{{ trajet.pointRendezVous|default('Non spécifié') }}</div>
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted);">Durée estimée</label>
-                    <p>{{ trajet.dureeEstimee|default('Inconnue') }}</p>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Durée estimée</label>
+                    <div style="padding: 0.25rem 0;">{{ trajet.dureeEstimee|default('Inconnue') }}</div>
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted);">Date de départ</label>
-                    <strong>{{ trajet.dateDepart|date('d/m/Y') }}</strong>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Date de départ</label>
+                    <div style="padding: 0.25rem 0; font-weight: bold;">{{ trajet.dateDepart|date('d/m/Y') }}</div>
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted);">Heure de départ</label>
-                    <strong>{{ trajet.heureDepart }}</strong>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Heure de départ</label>
+                    <div style="padding: 0.25rem 0; font-weight: bold;">{{ trajet.heureDepart }}</div>
                 </div>
             </div>
 
-            <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted);">Places disponibles</label>
-                    <p>{{ trajet.nbPlacesDisponibles }} / {{ trajet.nbPlacesTotal }}</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Places disponibles</label>
+                    <div style="padding: 0.25rem 0;">{{ trajet.nbPlacesDisponibles }} / {{ trajet.nbPlacesTotal }}</div>
                 </div>
-                <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted);">Prix</label>
-                    <p style="font-size: 1.2rem; font-weight: bold; color: var(--primary);">{{ trajet.prix|number_format(2, ',', ' ') }} DT</p>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">Prix</label>
+                    <div style="padding: 0.25rem 0; font-size: 1.3rem; font-weight: bold; color: var(--primary);">{{ trajet.prix|number_format(2, ',', ' ') }} DT</div>
                 </div>
             </div>
 
             <div style="margin-top: 1.5rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted);">Message aux passagers</label>
-                <div style="background: var(--bg-body); padding: 1rem; border-radius: 8px; font-style: italic; margin-top: 0.5rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Message aux passagers</label>
+                <div style="background: var(--bg-body); padding: 1.25rem; border-radius: 10px; font-style: italic; border: 1px solid var(--border-color); line-height: 1.5;">
                     "{{ trajet.messagePassagers|default('Aucun message.') }}"
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Préférences & Divers</h3>
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <span class="badge {{ trajet.preferences.fumeur ? 'badge-success' : 'badge-danger' }}">
+        <div class="card" style="padding: 1.5rem;">
+            <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">Préférences & Divers</h3>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <span class="badge {{ trajet.preferences.fumeur ? 'badge-success' : 'badge-danger' }}" style="padding: 0.4rem 0.8rem; margin: 0.25rem;">
                     {{ trajet.preferences.fumeur ? '🚬 Autorisé' : '🚭 Non fumeur' }}
                 </span>
-                <span class="badge {{ trajet.preferences.musique ? 'badge-success' : 'badge-danger' }}">
+                <span class="badge {{ trajet.preferences.musique ? 'badge-success' : 'badge-danger' }}" style="padding: 0.4rem 0.8rem; margin: 0.25rem;">
                     {{ trajet.preferences.musique ? '🎵 Musique' : '🔇 Pas de musique' }}
                 </span>
-                <span class="badge {{ trajet.preferences.animaux ? 'badge-success' : 'badge-danger' }}">
+                <span class="badge {{ trajet.preferences.animaux ? 'badge-success' : 'badge-danger' }}" style="padding: 0.4rem 0.8rem; margin: 0.25rem;">
                     {{ trajet.preferences.animaux ? '🐾 Animaux ok' : '🚫 Pas d\'animaux' }}
                 </span>
             </div>
             
-            <div style="margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-muted);">
-                Créé le : {{ trajet.createdAt|date('d/m/Y H:i') }}<br>
-                Dernière modif : {{ trajet.updatedAt|date('d/m/Y H:i') }}
+            <div style="margin-top: 2rem; font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 2rem;">
+                <div>Créé le : <strong>{{ trajet.createdAt|date('d/m/Y H:i') }}</strong></div>
+                <div>Modifié le : <strong>{{ trajet.updatedAt|date('d/m/Y H:i') }}</strong></div>
             </div>
         </div>
     </div>
 
     {# --- COLONNE DROITE : CONDUCTEUR & MODÉRATION --- #}
-    <div>
-        <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--accent);">
-            <h3 style="margin-bottom: 1rem;">👤 Conducteur</h3>
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+        <div class="card" style="padding: 1.5rem; border-left: 4px solid var(--accent);">
+            <h3 style="margin-bottom: 1.5rem;">👤 Conducteur</h3>
             {% if conducteur %}
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                    <div style="width: 60px; height: 60px; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.5rem; font-weight: bold;">
+                <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="width: 70px; height: 70px; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.75rem; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                         {{ (conducteur.prenom|slice(0, 1) ~ conducteur.nom|slice(0, 1))|upper }}
                     </div>
                     <div>
-                        <strong style="font-size: 1.1rem;">{{ conducteur.prenom }} {{ conducteur.nom }}</strong><br>
-                        <span style="color: var(--text-muted);">Note : {{ conducteur.noteMoyenne|default('N/A') }} ⭐</span>
+                        <div style="font-size: 1.2rem; font-weight: bold;">{{ conducteur.prenom }} {{ conducteur.nom }}</div>
+                        <div style="color: var(--text-muted); margin-top: 0.25rem;">Note moyenne : <strong style="color: var(--warning);">{{ conducteur.noteMoyenne|default('N/A') }} ⭐</strong></div>
                     </div>
                 </div>
-                <div style="font-size: 0.9rem;">
-                    <p>📧 {{ conducteur.email }}</p>
-                    <p>📞 {{ conducteur.telephone }}</p>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.95rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span>📧</span> <a href="mailto:{{ conducteur.email }}" style="color: var(--primary);">{{ conducteur.email }}</a>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span>📞</span> {{ conducteur.telephone }}
+                    </div>
                 </div>
             {% else %}
-                <p style="color: var(--danger);">Données du conducteur introuvables (ID: {{ trajet.conducteurId }})</p>
+                <p style="color: var(--danger); background: rgba(220,53,69,0.05); padding: 1rem; border-radius: 8px;">Données du conducteur introuvables (ID: {{ trajet.conducteurId }})</p>
             {% endif %}
         </div>
 
-        <div class="card" style="border-top: 4px solid {{ trajet.isMasque ? 'var(--danger)' : 'var(--success)' }};">
-            <h3 style="margin-bottom: 1rem;">🛡️ Modération</h3>
+        <div class="card" style="border-top: 4px solid {{ trajet.isMasque ? 'var(--danger)' : 'var(--success)' }}; overflow: hidden; padding: 1.5rem;">
+            <h3 style="margin-bottom: 1.5rem;">🛡️ Modération</h3>
             
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">État de visibilité</label>
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">État de visibilité</label>
                 {% if trajet.isMasque %}
-                    <div style="background: rgba(220, 53, 69, 0.1); color: var(--danger); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--danger); display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="background: rgba(220, 53, 69, 0.1); color: var(--danger); padding: 1rem; border-radius: 8px; border: 1px solid var(--danger); display: flex; align-items: center; gap: 0.5rem; word-break: break-word; line-height: 1.4;">
                         <strong>🚫 MASQUÉ</strong> — Les passagers ne peuvent plus voir ce trajet.
                     </div>
                     <form method="POST" action="{{ path('admin_trajet_reactiver', {id: trajet.id}) }}" style="margin-top: 1rem;">
                         <input type="hidden" name="_token" value="{{ csrf_token('admin_trajet_' ~ trajet.id) }}">
-                        <button type="submit" class="btn btn-success" style="width: 100%;">✅ Réactiver le trajet</button>
+                        <button type="submit" class="btn btn-success" style="width: 100%; padding: 0.75rem;">✅ Réactiver le trajet</button>
                     </form>
                 {% else %}
-                    <div style="background: rgba(40, 167, 69, 0.1); color: var(--success); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--success); display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="background: rgba(40, 167, 69, 0.1); color: var(--success); padding: 1rem; border-radius: 8px; border: 1px solid var(--success); display: flex; align-items: center; gap: 0.5rem; word-break: break-word; line-height: 1.4;">
                         <strong>👁️ VISIBLE</strong> — Le trajet est public.
                     </div>
                     <form method="POST" action="{{ path('admin_trajet_masquer', {id: trajet.id}) }}" style="margin-top: 1rem;">
                         <input type="hidden" name="_token" value="{{ csrf_token('admin_trajet_' ~ trajet.id) }}">
-                        <button type="submit" class="btn btn-danger" style="width: 100%;">🚫 Masquer le trajet</button>
+                        <button type="submit" class="btn btn-danger" style="width: 100%; padding: 0.75rem;">🚫 Masquer le trajet</button>
                     </form>
                 {% endif %}
             </div>
 
             <div style="margin-top: 2rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Note interne de modération</label>
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Note de modération actuelle</label>
                 {% if trajet.noteModeration %}
-                    <div style="background: #fff3cd; color: #856404; padding: 1rem; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 1rem; font-size: 0.9rem;">
-                        {{ trajet.noteModeration }}
+                    <div style="background: #fff3cd; color: #856404; padding: 1rem; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 1.5rem; font-size: 0.95rem; word-break: break-word; overflow-wrap: break-word; line-height: 1.5;">
+                        {{ trajet.noteModeration|nl2br }}
                     </div>
+                {% else %}
+                    <p style="font-size: 0.9rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.5rem; padding: 0.5rem 0;">Aucune note enregistrée.</p>
                 {% endif %}
                 
+                <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);">
+
                 <form method="POST" action="{{ path('admin_trajet_noter', {id: trajet.id}) }}">
+                    <label style="display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.75rem;">Modifier la note interne</label>
                     <input type="hidden" name="_token" value="{{ csrf_token('admin_trajet_note_' ~ trajet.id) }}">
-                    <textarea name="note" class="form-control" rows="3" placeholder="Ajouter ou modifier la note de modération...">{{ trajet.noteModeration }}</textarea>
-                    <button type="submit" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;">💾 Enregistrer la note</button>
+                    <textarea name="note" class="form-control" rows="5" style="width: 100%; box-sizing: border-box; resize: vertical; padding: 0.75rem; margin-top: 0.5rem;" placeholder="Ex: Signalement pour comportement, prix abusif...">{{ trajet.noteModeration }}</textarea>
+                    <button type="submit" class="btn btn-outline" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">💾 Mettre à jour la note</button>
                 </form>
             </div>
 
-            <div style="margin-top: 1.5rem; text-align: center;">
-                <span style="font-size: 0.9rem; color: var(--text-muted);">
-                    Nombre de signalements : <strong>{{ trajet.signalementsCount }}</strong>
+            <div style="margin-top: 2rem; text-align: center; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                <span style="font-size: 0.95rem; color: var(--text-muted);">
+                    Signalements enregistrés : <strong style="color: {{ trajet.signalementsCount > 0 ? 'var(--danger)' : 'inherit' }}; font-size: 1.1rem;">{{ trajet.signalementsCount }}</strong>
                 </span>
             </div>
         </div>

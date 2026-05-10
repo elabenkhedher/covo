@@ -37,16 +37,29 @@
       </div>
 
       <nav class="sidebar-nav">
-        {% block sidebar_nav %}{% endblock %}
+        {% if is_granted('ROLE_ADMIN') %}
+          <div class="nav-section">Administration</div>
+          <a href="{{ path('admin_trajet_index') }}"
+             class="{{ app.request.attributes.get('_route') starts with 'admin_trajet' ? 'active' : '' }}">
+            <span class="icon">🛡️</span> Trajets
+          </a>
+        {% elseif is_granted('ROLE_CONDUCTEUR') %}
+          {% block sidebar_nav_conducteur %}{% endblock %}
+        {% else %}
+          {% block sidebar_nav_passager %}{% endblock %}
+        {% endif %}
+
+        {% if not is_granted('ROLE_ADMIN') %}
+          {% block sidebar_nav %}{% endblock %}
+        {% endif %}
 
         <div class="nav-section">Compte</div>
         {% if app.user %}
-          {% if 'ROLE_ADMIN' in app.user.roles %}
-            <a href="{{ path('admin_trajet_index') }}"
-               class="{{ app.request.attributes.get('_route') starts with 'admin_trajet' ? 'active' : '' }}">
-              <span class="icon">⚙️</span> Administration
-            </a>
-          {% elseif 'ROLE_CONDUCTEUR' in app.user.roles %}
+          {% if is_granted('ROLE_ADMIN') %}
+            <div style="padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--text-muted); font-style: italic;">
+              Session modérateur
+            </div>
+          {% elseif is_granted('ROLE_CONDUCTEUR') %}
             <a href="{{ path('conducteur_profile') }}"
                class="{{ app.request.attributes.get('_route') == 'conducteur_profile' ? 'active' : '' }}">
               <span class="icon">👤</span> Mon profil

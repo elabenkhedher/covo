@@ -4,19 +4,13 @@
 {% block page_title %}Modération des trajets{% endblock %}
 {% block page_subtitle %}Gestion et surveillance des annonces publiées{% endblock %}
 
-{% block sidebar_nav %}
-    <div class="nav-section">Administration</div>
-    <a href="{{ path('admin_trajet_index') }}" class="active">
-        <span class="icon">🛡️</span> Trajets
-    </a>
-{% endblock %}
 
 {% block body %}
-<div class="card" style="margin-bottom: 2rem;">
-    <form method="GET" action="{{ path('admin_trajet_index') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; align-items: end;">
+<div class="card" style="margin-bottom: 2rem; padding: 1.25rem 1.75rem; border-radius: 10px; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border: 1px solid var(--border-color);">
+    <form method="GET" action="{{ path('admin_trajet_index') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; align-items: end;">
         <div>
-            <label class="form-label">Statut</label>
-            <select name="statut" class="form-control">
+            <label class="form-label" style="display: block; margin-bottom: 0.35rem; font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Statut</label>
+            <select name="statut" class="form-control" style="padding: 0.5rem 0.75rem; height: 42px; width: 100%;">
                 <option value="">Tous les statuts</option>
                 <option value="actif" {{ filtres.statut == 'actif' ? 'selected' : '' }}>Actif</option>
                 <option value="en_cours" {{ filtres.statut == 'en_cours' ? 'selected' : '' }}>En cours</option>
@@ -25,24 +19,24 @@
             </select>
         </div>
         <div>
-            <label class="form-label">Visibilité</label>
-            <select name="masque" class="form-control">
+            <label class="form-label" style="display: block; margin-bottom: 0.35rem; font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Visibilité</label>
+            <select name="masque" class="form-control" style="padding: 0.5rem 0.75rem; height: 42px; width: 100%;">
                 <option value="">Tous</option>
                 <option value="1" {{ filtres.masque == '1' ? 'selected' : '' }}>Masqués uniquement</option>
                 <option value="0" {{ filtres.masque == '0' ? 'selected' : '' }}>Visibles uniquement</option>
             </select>
         </div>
         <div>
-            <label class="form-label">Ville Départ</label>
-            <input type="text" name="villeDepart" class="form-control" placeholder="Ex: Tunis" value="{{ filtres.villeDepart }}">
+            <label class="form-label" style="display: block; margin-bottom: 0.35rem; font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Ville Départ</label>
+            <input type="text" name="villeDepart" class="form-control" placeholder="Ex: Tunis" value="{{ filtres.villeDepart }}" style="padding: 0.5rem 0.75rem; height: 42px; width: 100%;">
         </div>
         <div>
-            <label class="form-label">Ville Arrivée</label>
-            <input type="text" name="villeArrivee" class="form-control" placeholder="Ex: Sousse" value="{{ filtres.villeArrivee }}">
+            <label class="form-label" style="display: block; margin-bottom: 0.35rem; font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Ville Arrivée</label>
+            <input type="text" name="villeArrivee" class="form-control" placeholder="Ex: Sousse" value="{{ filtres.villeArrivee }}" style="padding: 0.5rem 0.75rem; height: 42px; width: 100%;">
         </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <button type="submit" class="btn btn-primary" style="flex: 1;">Filtrer</button>
-            <a href="{{ path('admin_trajet_index') }}" class="btn btn-outline" title="Réinitialiser">🔄</a>
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" style="height: 42px; padding: 0 1.5rem; font-weight: bold; flex: 1;">Filtrer</button>
+            <a href="{{ path('admin_trajet_index') }}" class="btn btn-outline" title="Réinitialiser" style="height: 42px; width: 42px; min-width: 42px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem;">🔄</a>
         </div>
     </form>
 </div>
