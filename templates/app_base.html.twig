@@ -22,7 +22,9 @@
           <div class="name">{{ app.user.fullName|default('Visiteur') }}</div>
           <div class="role">
             {% if app.user %}
-              {% if 'ROLE_CONDUCTEUR' in app.user.roles %}
+              {% if 'ROLE_ADMIN' in app.user.roles %}
+                🛡️ Administrateur
+              {% elseif 'ROLE_CONDUCTEUR' in app.user.roles %}
                 🚗 Conducteur
               {% else %}
                 🧍 Passager
@@ -39,7 +41,12 @@
 
         <div class="nav-section">Compte</div>
         {% if app.user %}
-          {% if 'ROLE_CONDUCTEUR' in app.user.roles %}
+          {% if 'ROLE_ADMIN' in app.user.roles %}
+            <a href="{{ path('admin_trajet_index') }}"
+               class="{{ app.request.attributes.get('_route') starts with 'admin_trajet' ? 'active' : '' }}">
+              <span class="icon">⚙️</span> Administration
+            </a>
+          {% elseif 'ROLE_CONDUCTEUR' in app.user.roles %}
             <a href="{{ path('conducteur_profile') }}"
                class="{{ app.request.attributes.get('_route') == 'conducteur_profile' ? 'active' : '' }}">
               <span class="icon">👤</span> Mon profil
