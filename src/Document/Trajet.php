@@ -92,6 +92,15 @@ class Trajet
     #[MongoDB\Field(type: 'hash')]
     private array $currentLocation = [];
 
+    #[MongoDB\Field(type: 'bool')]
+    private bool $masque = false;
+
+    #[MongoDB\Field(type: 'string', nullable: true)]
+    private ?string $noteModeration = null;
+
+    #[MongoDB\Field(type: 'int')]
+    private int $signalementsCount = 0;
+
     public function getCurrentLocation(): array
     {
         return $this->currentLocation;
@@ -297,6 +306,39 @@ class Trajet
         return $this;
     }
 
+    public function isMasque(): bool
+    {
+        return $this->masque;
+    }
+
+    public function setMasque(bool $masque): static
+    {
+        $this->masque = $masque;
+        return $this;
+    }
+
+    public function getNoteModeration(): ?string
+    {
+        return $this->noteModeration;
+    }
+
+    public function setNoteModeration(?string $noteModeration): static
+    {
+        $this->noteModeration = $noteModeration;
+        return $this;
+    }
+
+    public function getSignalementsCount(): int
+    {
+        return $this->signalementsCount;
+    }
+
+    public function setSignalementsCount(int $signalementsCount): static
+    {
+        $this->signalementsCount = $signalementsCount;
+        return $this;
+    }
+
     public function getPlacesReservees(): int
     {
         return $this->nbPlacesTotal - $this->nbPlacesDisponibles;
@@ -336,6 +378,7 @@ class Trajet
             'messagePassagers'    => $this->messagePassagers,
             'createdAt'           => $this->createdAt->format(\DateTimeInterface::ATOM),
             'updatedAt'           => $this->updatedAt->format(\DateTimeInterface::ATOM),
+            'masque'              => $this->masque,
         ];
     }
 }

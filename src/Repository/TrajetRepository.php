@@ -34,9 +34,10 @@ class TrajetRepository extends ServiceDocumentRepository
     {
         $qb = $this->createQueryBuilder();
 
-        // Toujours : seulement les trajets actifs à venir
+        // Toujours : seulement les trajets actifs à venir et non masqués
         $qb->field('statut')->equals('actif');
         $qb->field('dateDepart')->gte(new \DateTime('today'));
+        $qb->field('masque')->notEqual(true);
 
         if (!empty($filtres['villeDepart'])) {
             $qb->field('villeDepart')->equals(
@@ -107,11 +108,54 @@ class TrajetRepository extends ServiceDocumentRepository
         return $this->createQueryBuilder()
             ->field('statut')->equals('actif')
             ->field('dateDepart')->gte(new \DateTime('today'))
+            ->field('masque')->notEqual(true)
             ->field('coordDepart')->near($lng, $lat)
                 ->maxDistance($rayonMetres / 6378137) // distance en radians
             ->sort('dateDepart', 'ASC')
             ->getQuery()
             ->execute()
             ->toArray();
+    }
+
+    /**
+     * Récupère tous les trajets pour l'administration avec filtres optionnels.
+     *
+     * @return Trajet[]
+     */
+    public function findAllForAdmin(array $filtres = []): array
+    {
+        $qb = $this->createQueryBuilder();
+
+        if (!empty($filtres['statut'])) {
+            $qb->field('statut')->equals($filtres['statut']);
+        }
+
+        if (isset($filtres['masque'])) {
+            $qb->field('masque')->equals((bool) $filtres['masque']);
+        }
+
+        if (!empty($filtres['conducteurId'])) {
+            $qb->field('conducteurId')->equals($filtres['conducteurId']);
+        }
+
+        if (!empty($filtres['villeDepart'])) {
+            $qb->field('villeDepart')->equals(
+                new \MongoDB\BSON\Regex($filtres['villeDepart'], 'i')
+            );
+        }
+
+        if (!empty($filtres['villeArrivee'])) {
+            $qb->field('villeArrivee')->equals(
+                new \MongoDB\BSON\Regex($filtres['villeArrivee'], 'i')
+            );
+        }
+
+        if (!empty($filtres['dateDepuis']) && $filtres['dateDepuis'] instanceof \DateTimeInterface) {
+            $qb->field('dateDepart')->gte($filtres['dateDepuis']);
+        }
+
+        $qb->sort('createdAt', 'DESC');
+
+        return $qb->getQuery()->execute()->toArray();
     }
 }

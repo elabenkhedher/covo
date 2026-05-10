@@ -212,9 +212,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function __serialize(): array
     {
-        $data = (array) $this;
-        $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
+        return [
+            'id' => $this->id,
+            'email' => $this->email,
+            'roles' => $this->roles,
+            'password' => $this->password,
+            'prenom' => $this->prenom,
+            'nom' => $this->nom,
+        ];
+    }
 
-        return $data;
+    public function __unserialize(array $data): void
+    {
+        $this->id = $data['id'] ?? null;
+        $this->email = $data['email'] ?? null;
+        $this->roles = $data['roles'] ?? [];
+        $this->password = $data['password'] ?? null;
+        $this->prenom = $data['prenom'] ?? null;
+        $this->nom = $data['nom'] ?? null;
     }
 }

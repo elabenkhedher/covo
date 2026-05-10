@@ -12,10 +12,14 @@ class SecurityController extends AbstractController
     #[Route(path: '/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        if ($this->getUser() && $this->isGranted('ROLE_CONDUCTEUR')) {
-             return $this->redirectToRoute('conducteur_dashboard');
-        } else if ($this->getUser()) {
-             return $this->redirectToRoute('passager_dashboard');
+        if ($this->getUser()) {
+            if ($this->isGranted('ROLE_ADMIN')) {
+                return $this->redirectToRoute('admin_trajet_index');
+            }
+            if ($this->isGranted('ROLE_CONDUCTEUR')) {
+                return $this->redirectToRoute('conducteur_dashboard');
+            }
+            return $this->redirectToRoute('passager_dashboard');
         }
 
         // get the login error if there is one
