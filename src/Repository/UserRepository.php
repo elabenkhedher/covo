@@ -55,4 +55,3 @@ class UserRepository extends ServiceDocumentRepository implements PasswordUpgrad
         return (int) $col->countDocuments(['passagerId' => $userId]);
     }
 }
-

@@ -36,11 +36,11 @@ class Trajet
      * GeoJSON Point : { "type": "Point", "coordinates": [lng, lat] }
      */
     #[MongoDB\Field(type: 'hash')]
-    #[MongoDB\Index(keys: ['coordDepart.coordinates' => '2dsphere'], name: 'idx_coordDepart_2dsphere')]
+    #[MongoDB\Index(keys: ['coordDepart.coordinates' => '2dsphere'], name: 'idx_coordDepart_2dsphere', sparse: true)]
     private array $coordDepart = [];
 
     #[MongoDB\Field(type: 'hash')]
-    #[MongoDB\Index(keys: ['coordArrivee.coordinates' => '2dsphere'], name: 'idx_coordArrivee_2dsphere')]
+    #[MongoDB\Index(keys: ['coordArrivee.coordinates' => '2dsphere'], name: 'idx_coordArrivee_2dsphere', sparse: true)]
     private array $coordArrivee = [];
 
     #[MongoDB\Field(type: 'date')]
