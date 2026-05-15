@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}CovoISET{% endblock %} — CovoISET</title>
   <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/chat.css') }}">
   {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -23,6 +24,31 @@
   {# ===== PAGE CONTENT ===== #}
   {% block body %}{% endblock %}
 
+  {# ===== AI ASSISTANT (Uniquement sur la page d'accueil) ===== #}
+  {% if app.request.attributes.get('_route') == 'app_home' %}
+    <div class="ai-assistant-container">
+      <div class="ai-chat-window" id="aiChatWindow">
+        <div class="ai-chat-header">
+          <h3>✨ Assistant CovoISET</h3>
+          <span class="close-chat" id="closeChat">✕</span>
+        </div>
+        <div class="ai-chat-messages" id="chatMessages">
+          <div class="chat-msg bot">
+            Bonjour ! Je suis l'assistant intelligent de CovoISET. Comment puis-je vous aider aujourd'hui ?
+          </div>
+        </div>
+        <div class="ai-chat-input">
+          <input type="text" id="chatInput" placeholder="Posez votre question...">
+          <button id="sendChat">Envoyer</button>
+        </div>
+      </div>
+      <button class="ai-chat-button" id="openChat">
+        <span>🤖</span>
+      </button>
+    </div>
+    <script src="{{ asset('js/chat.js') }}"></script>
+  {% endif %}
+
   {# ===== FOOTER ===== #}
   <footer>
     <p>© {{ "now"|date("Y") }} <span>CovoISET</span> — ISET Kélibia · Projet Universitaire 2025/2026</p>
@@ -32,7 +58,9 @@
   <div class="toast-container"></div>
 
   <script src="{{ asset('js/app.js') }}"></script>
+  <script src="{{ asset('js/chat.js') }}"></script>
   {% block extra_js %}{% endblock %}
 
 </body>
 </html>
+
