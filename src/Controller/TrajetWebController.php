@@ -91,8 +91,16 @@ class TrajetWebController extends AbstractController
             $trajet->setConducteurId((string) $this->getUser()->getId());
             $trajet->setNbPlacesDisponibles($trajet->getNbPlacesTotal());
 
-            $this->dm->persist($trajet);
-            $this->dm->flush();
+            try {
+                $this->dm->persist($trajet);
+                $this->dm->flush();
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Erreur lors de la publication : ' . $e->getMessage());
+                return $this->render('conducteur/publier-trajet.html.twig', [
+                    'trajetForm' => $form->createView(),
+                    'vehicules' => [],
+                ]);
+            }
 
             $this->addFlash('success', 'Votre trajet a été publié avec succès !');
             return $this->redirectToRoute('trajet_mes_trajets');
@@ -118,8 +126,8 @@ class TrajetWebController extends AbstractController
         $stats = ['total' => count($allTrajets), 'actifs' => 0, 'annules' => 0, 'revenus' => 0.0];
         foreach ($allTrajets as $t) {
             if ($t->getStatut() === 'actif') $stats['actifs']++;
-            if ($t->getStatut() === 'annulé') $stats['annules']++;
-            if ($t->getStatut() === 'terminé') {
+            if ($t->getStatut() === 'annule') $stats['annules']++;
+            if ($t->getStatut() === 'termine') {
                 $stats['revenus'] += $t->getPrix() * ($t->getNbPlacesTotal() - $t->getNbPlacesDisponibles());
             }
         }

@@ -159,3 +159,4 @@ class TrajetRepository extends ServiceDocumentRepository
         return $qb->getQuery()->execute()->toArray();
     }
 }
+ 

@@ -47,6 +47,10 @@
              class="{{ app.request.attributes.get('_route') starts with 'admin_trajet' ? 'active' : '' }}">
             <span class="icon">🛡️</span> Trajets
           </a>
+          <a href="{{ path('admin_statistiques') }}"
+             class="{{ app.request.attributes.get('_route') starts with 'admin_statistiques' ? 'active' : '' }}">
+            <span class="icon">📊</span> Statistiques
+          </a>
         {% elseif is_granted('ROLE_CONDUCTEUR') %}
           {% block sidebar_nav_conducteur %}{% endblock %}
         {% else %}

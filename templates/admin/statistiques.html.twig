@@ -1,0 +1,175 @@
+{% extends 'app_base.html.twig' %}
+
+{% block title %}Administration — Statistiques{% endblock %}
+{% block page_title %}Statistiques générales{% endblock %}
+{% block page_subtitle %}Historique et données globales de la plateforme{% endblock %}
+
+{% block extra_css %}
+<style>
+  .stats-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .btn-telecharger {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: #16a34a;
+    color: #fff;
+    padding: .6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: .9rem;
+    text-decoration: none;
+    transition: background .2s;
+  }
+  .btn-telecharger:hover { background: #15803d; color: #fff; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+  }
+  .stat-card .label {
+    font-size: .8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .stat-card .value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+    margin-top: .4rem;
+  }
+  .stat-card .value.green  { color: #16a34a; }
+  .stat-card .value.blue   { color: #2563eb; }
+  .stat-card .value.orange { color: #d97706; }
+  .stat-card .sub { font-size: .78rem; color: var(--text-muted); margin-top: .15rem; }
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 1.5rem 0 .75rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .detail-table {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border-collapse: collapse;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .detail-table td {
+    padding: .7rem 1.1rem;
+    text-align: left;
+    font-size: .88rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-table tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    padding: .15rem .55rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 700;
+  }
+  .badge.green  { background: #dcfce7; color: #15803d; }
+  .badge.blue   { background: #dbeafe; color: #1d4ed8; }
+  .badge.yellow { background: #fef9c3; color: #a16207; }
+  .badge.red    { background: #fee2e2; color: #b91c1c; }
+  .badge.gray   { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="stats-header">
+  <a href="{{ path('admin_statistiques_telecharger') }}" class="btn-telecharger">
+    ⬇️ Télécharger (CSV)
+  </a>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="label">Total trajets</span>
+    <span class="value blue">{{ totalTrajets }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="label">Total réservations</span>
+    <span class="value green">{{ totalReservations }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="label">Montant total reçu</span>
+    <span class="value green">{{ totalArgent|number_format(2, '.', ' ') }} TND</span>
+  </div>
+  <div class="stat-card">
+    <span class="label">Total utilisateurs</span>
+    <span class="value">{{ totalUsers }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="label">Total avis</span>
+    <span class="value orange">{{ totalAvis }}</span>
+    <span class="sub">Note moyenne : ⭐ {{ noteMoyenne }} / 5</span>
+  </div>
+</div>
+
+<div class="section-title">🚗 Trajets</div>
+<table class="detail-table">
+  <tbody>
+    <tr><td><span class="badge green">Actif</span></td><td>{{ trajetsActif }}</td></tr>
+    <tr><td><span class="badge blue">En cours</span></td><td>{{ trajetsEnCours }}</td></tr>
+    <tr><td><span class="badge gray">Terminé</span></td><td>{{ trajetsTermine }}</td></tr>
+    <tr><td><span class="badge red">Annulé</span></td><td>{{ trajetsAnnule }}</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>{{ totalTrajets }}</strong></td></tr>
+  </tbody>
+</table>
+
+<div class="section-title">📋 Réservations</div>
+<table class="detail-table">
+  <tbody>
+    <tr><td><span class="badge green">Confirmée</span></td><td>{{ reservationsConfirmee }}</td></tr>
+    <tr><td><span class="badge gray">Terminée</span></td><td>{{ reservationsTerminee }}</td></tr>
+    <tr><td><span class="badge red">Annulée</span></td><td>{{ reservationsAnnulee }}</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>{{ totalReservations }}</strong></td></tr>
+    <tr><td><strong>💰 Montant total</strong></td><td><strong>{{ totalArgent|number_format(2, '.', ' ') }} TND</strong></td></tr>
+  </tbody>
+</table>
+
+<div class="section-title">👥 Utilisateurs</div>
+<table class="detail-table">
+  <tbody>
+    <tr><td><span class="badge green">Actifs</span></td><td>{{ usersActif }}</td></tr>
+    <tr><td><span class="badge yellow">En attente</span></td><td>{{ usersEnAttente }}</td></tr>
+    <tr><td><span class="badge red">Suspendus</span></td><td>{{ usersSuspendu }}</td></tr>
+    <tr><td>Conducteurs</td><td>{{ conducteurs }}</td></tr>
+    <tr><td>Passagers</td><td>{{ passagers }}</td></tr>
+    <tr><td>Admins</td><td>{{ admins }}</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>{{ totalUsers }}</strong></td></tr>
+  </tbody>
+</table>
+
+{% endblock %}
