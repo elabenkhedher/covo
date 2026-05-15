@@ -358,12 +358,13 @@ class PassagerController extends AbstractController
         $nbPlaces = (int) $request->request->get('nbPlaces', 1);
 
         try {
-            $this->reservationService->reserver(
+            $reservation = $this->reservationService->reserver(
                 $trajetId,
                 $nbPlaces
             );
 
-            $this->addFlash('success', 'Votre réservation a été effectuée avec succès !');
+            // Redirect to the mock ClicToPay API for payment
+            return $this->redirectToRoute('app_payment_page', ['reservationId' => $reservation->getId()]);
         } catch (\Exception $e) {
             $this->addFlash('error', 'Erreur lors de la réservation : ' . $e->getMessage());
         }

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement Effectué</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .success-container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            padding: 40px 30px;
+        }
+        .icon {
+            font-size: 60px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .btn-return {
+            background-color: #003366;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            transition: background-color 0.2s;
+        }
+        .btn-return:hover {
+            background-color: #002244;
+        }
+    </style>
+</head>
+<body>
+
+<div class="success-container">
+    <div class="icon">✓</div>
+    <h2>Paiement Réussi</h2>
+    <p>Votre transaction a été traitée avec succès. Le reçu a été envoyé à votre commerçant.</p>
+    <p style="font-size: 0.9em; color: #888;">Ticket ID: {{ paymentId }}</p>
+    
+    <a href="{{ path('passager_reservations') }}" class="btn-return">Retour à mes réservations</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPS - Système de Paiement Sécurisé</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .payment-container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #003366;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid #cc0000;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .amount-display {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            border-color: #003366;
+            outline: none;
+        }
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        .col {
+            flex: 1;
+        }
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #003366;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background-color: #002244;
+        }
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background-color: #ccc;
+        }
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .logos {
+            text-align: center;
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .logos img {
+            height: 30px;
+            opacity: 0.8;
+        }
+        .footer {
+            background-color: #f9f9f9;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #777;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+
+<div class="payment-container">
+    <div class="header">
+        <h1>ClicToPay</h1>
+        <p>Système de Paiement Sécurisé - SMT</p>
+    </div>
+    
+    <div class="content">
+        <div class="amount-display">
+            {{ amount|number_format(2, '.', ',') }} {{ currency }}
+        </div>
+
+        {% if error %}
+            <div class="error-message">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form action="{{ path('app_payment_page', {'reservationId': paymentId}) }}" method="POST">
+            <div class="form-group">
+                <label for="cardNumber">Numéro de Carte</label>
+                <input type="text" id="cardNumber" name="cardNumber" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="name">Nom sur la carte</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Nom Prénom" required>
+            </div>
+
+            <div class="row">
+                <div class="col form-group">
+                    <label for="expiry">Date d'expiration (MM/AA)</label>
+                    <input type="text" id="expiry" name="expiry" class="form-control" placeholder="MM/AA" maxlength="5" required>
+                </div>
+                <div class="col form-group">
+                    <label for="cvv">Code de sécurité</label>
+                    <input type="text" id="cvv" name="cvv" class="form-control" placeholder="123" maxlength="4" required>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="btn btn-secondary" onclick="window.history.back();">Annuler</button>
+                <button type="submit" class="btn btn-primary">Valider</button>
+            </div>
+        </form>
+
+        <div class="logos">
+            <!-- Simulated Logos -->
+            <div style="font-weight: bold; color: #1a1f71; font-style: italic;">VISA</div>
+            <div style="font-weight: bold; color: #ff5f00;">mastercard</div>
+            <div style="font-weight: bold; color: #003366;">CIB</div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        © {{ 'now'|date('Y') }} Monétique Tunisie. Tous droits réservés.
+    </div>
+</div>
+
+<script>
+    // Simple format for card number
+    document.getElementById('cardNumber').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        let formattedValue = '';
+        for (let i = 0; i < value.length; i++) {
+            if (i > 0 && i % 4 === 0) {
+                formattedValue += ' ';
+            }
+            formattedValue += value[i];
+        }
+        e.target.value = formattedValue;
+    });
+
+    // Simple format for expiry date
+    document.getElementById('expiry').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\//g, '').replace(/[^0-9]/gi, '');
+        if (value.length >= 2) {
+            value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        }
+        e.target.value = value;
+    });
+</script>
+
+</body>
+</html>

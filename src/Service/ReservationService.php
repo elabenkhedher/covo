@@ -47,6 +47,7 @@ class ReservationService
         $reservation->setPassagerId((string)$user->getId());
         $reservation->setNbPlaces($nbPlaces);
         $reservation->setPrixTotal($nbPlaces * $trajet->getPrix());
+        $reservation->setStatut('en_attente_paiement');
 
         // Mise à jour du trajet
         $trajet->setNbPlacesDisponibles($trajet->getNbPlacesDisponibles() - $nbPlaces);
