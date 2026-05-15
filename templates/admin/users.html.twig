@@ -7,132 +7,33 @@
 
 {% block extra_css %}
 <style>
-  /* ── Filtres ── */
-  .filter-bar {
-    display: flex;
-    gap: .75rem;
-    flex-wrap: wrap;
-    align-items: center;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow);
-  }
-  .filter-bar select {
-    padding: .45rem .75rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
-    font-size: .9rem;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .filter-bar label { font-size: .85rem; color: var(--text-muted); font-weight: 600; }
-
-  /* ── Table ── */
-  .table-wrapper {
-    background: #fff;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    overflow: hidden;
-  }
-  .table-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .table-header strong { font-size: 1rem; }
-  .count-badge {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: .2rem .65rem;
-    font-size: .82rem;
-    color: var(--text-muted);
-    font-weight: 600;
-  }
-  table { width: 100%; border-collapse: collapse; }
-  thead th {
-    text-align: left;
-    padding: .65rem 1rem;
-    background: var(--bg);
-    font-size: .78rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    font-weight: 700;
-    border-bottom: 1px solid var(--border);
-  }
-  tbody td {
-    padding: .85rem 1rem;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-    font-size: .9rem;
-  }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: #fafbff; }
-
   /* ── Identité ── */
   .user-cell { display: flex; align-items: center; gap: .75rem; }
-  .user-info-name  { font-weight: 700; color: var(--text); line-height: 1.2; }
+  .user-info-name  { font-weight: 700; color: var(--text); line-height: 1.2; font-family: 'Syne', sans-serif;}
   .user-info-email { font-size: .8rem; color: var(--text-muted); }
-
-  /* ── Badges statut compte ── */
-  .badge-actif      { background: #dcfce7; color: #15803d; }
-  .badge-suspendu   { background: #fee2e2; color: #b91c1c; }
-  .badge-en_attente { background: #fef9c3; color: #a16207; }
 
   /* ── Boutons action ── */
   .actions { display: flex; gap: .35rem; flex-wrap: wrap; }
   .btn-xs {
-    padding: .28rem .6rem;
+    padding: .3rem .65rem;
     border-radius: 6px;
     border: none;
-    font-size: .78rem;
+    font-size: .75rem;
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: .2rem;
-    font-family: inherit;
-    transition: opacity .15s;
+    font-family: 'DM Sans', sans-serif;
+    transition: all .2s;
   }
-  .btn-xs:hover { opacity: .8; }
-  .btn-xs.valider    { background: #dcfce7; color: #15803d; }
-  .btn-xs.suspendre  { background: #fef9c3; color: #a16207; }
-  .btn-xs.reactiver  { background: #dbeafe; color: #1d4ed8; }
-  .btn-xs.supprimer  { background: #fee2e2; color: #b91c1c; }
-  .btn-xs.historique { background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
-
-  /* ── Modal ── */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.5);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: #fff;
-    border-radius: var(--radius);
-    padding: 2rem;
-    max-width: 420px;
-    width: 90%;
-    box-shadow: 0 25px 60px rgba(0,0,0,.2);
-  }
-  .modal h3 { margin: 0 0 .6rem; font-size: 1.1rem; }
-  .modal p  { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.5rem; line-height: 1.5; }
-  .modal-actions { display: flex; gap: .75rem; justify-content: flex-end; }
+  .btn-xs:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .btn-xs.valider    { background: #d1fae5; color: #065f46; }
+  .btn-xs.suspendre  { background: #fef3c7; color: #92400e; }
+  .btn-xs.reactiver  { background: #dbeafe; color: #1e40af; }
+  .btn-xs.supprimer  { background: #fee2e2; color: #991b1b; }
+  .btn-xs.historique { background: #f1f5f9; color: #475569; }
 </style>
 {% endblock %}
 
@@ -140,39 +41,49 @@
 {% block body %}
 
 {# ── Filtres ── #}
-<form class="filter-bar" method="get" action="{{ path('admin_users') }}">
-  <label>Rôle :</label>
-  <select name="role" onchange="this.form.submit()">
-    <option value="">Tous</option>
-    <option value="conducteur" {{ filter_role == 'conducteur' ? 'selected' }}>🚗 Conducteur</option>
-    <option value="passager"   {{ filter_role == 'passager'   ? 'selected' }}>🧍 Passager</option>
-    <option value="admin"      {{ filter_role == 'admin'      ? 'selected' }}>🛡️ Admin</option>
-  </select>
+<div class="card" style="margin-bottom: 2rem;">
+  <div class="card-body">
+    <form method="get" action="{{ path('admin_users') }}" style="display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: flex-end;">
+      <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+        <label>Rôle</label>
+        <select name="role" class="form-control" onchange="this.form.submit()" style="padding: 0.6rem 1rem;">
+          <option value="">Tous les rôles</option>
+          <option value="conducteur" {{ filter_role == 'conducteur' ? 'selected' }}>🚗 Conducteur</option>
+          <option value="passager"   {{ filter_role == 'passager'   ? 'selected' }}>🧍 Passager</option>
+          <option value="admin"      {{ filter_role == 'admin'      ? 'selected' }}>🛡️ Admin</option>
+        </select>
+      </div>
 
-  <label style="margin-left:.5rem;">Statut :</label>
-  <select name="statut" onchange="this.form.submit()">
-    <option value="">Tous</option>
-    <option value="actif"      {{ filter_statut == 'actif'      ? 'selected' }}>✅ Actif</option>
-    <option value="suspendu"   {{ filter_statut == 'suspendu'   ? 'selected' }}>🚫 Suspendu</option>
-    <option value="en_attente" {{ filter_statut == 'en_attente' ? 'selected' }}>⏳ En attente</option>
-  </select>
+      <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+        <label>Statut</label>
+        <select name="statut" class="form-control" onchange="this.form.submit()" style="padding: 0.6rem 1rem;">
+          <option value="">Tous les statuts</option>
+          <option value="actif"      {{ filter_statut == 'actif'      ? 'selected' }}>✅ Actif</option>
+          <option value="suspendu"   {{ filter_statut == 'suspendu'   ? 'selected' }}>🚫 Suspendu</option>
+          <option value="en_attente" {{ filter_statut == 'en_attente' ? 'selected' }}>⏳ En attente</option>
+        </select>
+      </div>
 
-  {% if filter_role or filter_statut %}
-    <a href="{{ path('admin_users') }}" class="btn-xs historique" style="margin-left:auto;">✕ Réinitialiser</a>
-  {% endif %}
-</form>
+      {% if filter_role or filter_statut %}
+        <div style="margin-bottom: 0.1rem;">
+          <a href="{{ path('admin_users') }}" class="btn btn-outline" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;">✕ Réinitialiser</a>
+        </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
 
 {# ── Table ── #}
 <div class="table-wrapper">
-  <div class="table-header">
-    <strong>👥 Liste des utilisateurs</strong>
-    <span class="count-badge">{{ users|length }} résultat(s)</span>
+  <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg-card);">
+    <strong style="font-family: 'Syne', sans-serif; font-size: 1.1rem; color: var(--text);">👥 Liste des utilisateurs</strong>
+    <span class="badge badge-gray" style="font-size: 0.85rem;">{{ users|length }} résultat(s)</span>
   </div>
 
   {% if users is empty %}
     {{ m.empty_state('🔍', 'Aucun utilisateur trouvé', 'Essayez de modifier les filtres.') }}
   {% else %}
-  <table>
+  <table class="data-table">
     <thead>
       <tr>
         <th>Utilisateur</th>

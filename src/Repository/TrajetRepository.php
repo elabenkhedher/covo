@@ -62,8 +62,22 @@ class TrajetRepository extends ServiceDocumentRepository
             $qb->field('nbPlacesDisponibles')->gte((int) $filtres['nbPlaces']);
         }
 
-        if (isset($filtres['prixMax']) && $filtres['prixMax'] >= 0) {
+        if (isset($filtres['prix_max']) && $filtres['prix_max'] >= 0) {
+            $qb->field('prix')->lte((float) $filtres['prix_max']);
+        } elseif (isset($filtres['prixMax']) && $filtres['prixMax'] >= 0) {
             $qb->field('prix')->lte((float) $filtres['prixMax']);
+        }
+
+        if (!empty($filtres['heure'])) {
+            if ($filtres['heure'] === 'matin') {
+                $qb->field('heureDepart')->lt('12:00');
+            } elseif ($filtres['heure'] === 'aprem') {
+                $qb->field('heureDepart')->gte('12:00');
+            }
+        }
+
+        if (!empty($filtres['nofumeur'])) {
+            $qb->field('preferences.fumeur')->equals(false);
         }
 
         // Recherche géospatiale $near avec index 2dsphere
@@ -76,7 +90,17 @@ class TrajetRepository extends ServiceDocumentRepository
             // Alternative via $near/$geoNear natif (voir findNearby())
         }
 
-        $qb->sort('dateDepart', 'ASC');
+        if (!empty($filtres['sort'])) {
+            if ($filtres['sort'] === 'prix_asc') {
+                $qb->sort('prix', 'ASC');
+            } elseif ($filtres['sort'] === 'prix_desc') {
+                $qb->sort('prix', 'DESC');
+            } elseif ($filtres['sort'] === 'depart') {
+                $qb->sort('dateDepart', 'ASC')->sort('heureDepart', 'ASC');
+            }
+        } else {
+            $qb->sort('dateDepart', 'ASC')->sort('heureDepart', 'ASC');
+        }
 
         return $qb->getQuery()->execute()->toArray();
     }

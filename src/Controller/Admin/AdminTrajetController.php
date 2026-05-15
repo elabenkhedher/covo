@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/admin/trajets')]
+#[Route('/admin')]
 #[IsGranted('ROLE_ADMIN')]
 class AdminTrajetController extends AbstractController
 {
@@ -27,7 +27,7 @@ class AdminTrajetController extends AbstractController
         $this->userRepository = $userRepository;
     }
 
-    #[Route('', name: 'admin_trajet_index', methods: ['GET'])]
+    #[Route('/trajets', name: 'admin_trajet_index', methods: ['GET'])]
     public function index(Request $request): Response
     {
         $filtres = [

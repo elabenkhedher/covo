@@ -51,7 +51,7 @@ class ChatController extends AbstractController
 
         foreach (array_slice($recentTrajets, 0, 10) as $t) {
             $trajetsSummary .= sprintf(
-                "- %s -> %s (%s à %s, %s places, %.2f€)\n",
+                "- %s -> %s (%s à %s, %s places, %.2f DT)\n",
                 $t->getVilleDepart(), $t->getVilleArrivee(),
                 $t->getDateDepart()->format('d/m/Y'), $t->getHeureDepart(),
                 $t->getNbPlacesDisponibles(), $t->getPrix()

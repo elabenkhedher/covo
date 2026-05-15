@@ -29,6 +29,10 @@ class TrajetWebController extends AbstractController
             'villeArrivee' => $request->query->get('villeArrivee'),
             'date'         => $request->query->get('date'),
             'nbPlaces'     => $request->query->getInt('nbPlaces') ?: null,
+            'heure'        => $request->query->get('heure'),
+            'prix_max'     => $request->query->get('prix_max'),
+            'nofumeur'     => $request->query->get('nofumeur'),
+            'sort'         => $request->query->get('sort'),
         ]);
 
         $trajets = $this->trajetService->rechercherTrajets($filtres);
@@ -41,10 +45,30 @@ class TrajetWebController extends AbstractController
             }
         }
 
+        // Post-filtering for note_min
+        $noteMin = $request->query->get('note_min');
+        if ($noteMin) {
+            $noteMin = (float) $noteMin;
+            $trajets = array_filter($trajets, function($t) use ($conducteurs, $noteMin) {
+                $c = $conducteurs[$t->getConducteurId()] ?? null;
+                return $c && $c->getNoteMoyenne() >= $noteMin;
+            });
+        }
+
+        // Post-sorting for note
+        if (($filtres['sort'] ?? '') === 'note') {
+            usort($trajets, function($a, $b) use ($conducteurs) {
+                $nA = ($conducteurs[$a->getConducteurId()] ?? null)?->getNoteMoyenne() ?? 0;
+                $nB = ($conducteurs[$b->getConducteurId()] ?? null)?->getNoteMoyenne() ?? 0;
+                return $nB <=> $nA;
+            });
+        }
+
         return $this->render('search.html.twig', [
-            'trajets' => $trajets,
+            'trajets' => array_values($trajets),
             'conducteurs' => $conducteurs,
             'filtres' => $filtres,
+            'filters' => $request->query->all(),
             'total'   => count($trajets),
         ]);
     }

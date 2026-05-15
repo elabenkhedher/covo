@@ -78,12 +78,6 @@
             </td>
             <td>
               <div class="table-actions">
-                {% if res.trajet and res.trajet.statut == 'en_cours' %}
-                    <a href="{{ path('passager_tracking', {'reservationId': res.id}) }}"
-                      class="btn btn-sm btn-primary">
-                        🗺️ Suivre le trajet
-                    </a>
-                {% endif %}
                 {% if res.statut == 'confirmee' %}
                   <a href="{{ path('passager_tracking', {reservationId: res.id}) }}"
                      class="btn btn-primary btn-sm">📍 Suivre</a>

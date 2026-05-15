@@ -116,9 +116,11 @@
       <span class="count">{{ trajets|length }} trajet(s) disponible(s)</span>
     </div>
     <form action="{{ path('trajet_search') }}" method="GET" id="sortForm">
-      <input type="hidden" name="depart" value="{{ filters.depart|default('') }}">
-      <input type="hidden" name="arrivee" value="{{ filters.arrivee|default('') }}">
-      <input type="hidden" name="date" value="{{ filters.date|default('') }}">
+      {% for key, value in app.request.query.all %}
+        {% if key != 'sort' %}
+          <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endif %}
+      {% endfor %}
       <select class="sort-select" name="sort" onchange="document.getElementById('sortForm').submit()">
         <option value="depart"  {{ filters.sort|default('depart')  == 'depart'  ? 'selected' : '' }}>Trier par : Départ</option>
         <option value="prix_asc"   {{ filters.sort|default('') == 'prix_asc'   ? 'selected' : '' }}>Prix croissant</option>

@@ -73,7 +73,7 @@ class AssistantService:
         payload = {
             "model": "mistral-small-latest",
             "messages": [
-                {"role": "system", "content": "Tu es l'assistant de CovoISET. Réponds en français selon le contexte."},
+                {"role": "system", "content": "Tu es l'assistant de CovoISET. Réponds en français de façon concise selon le contexte fourni. L'unité monétaire est toujours le DT (Dinar Tunisien), n'utilise jamais l'Euro (€)."},
                 {"role": "user", "content": f"CONTEXT: {context}\nQUESTION: {question}"}
             ]
         }
