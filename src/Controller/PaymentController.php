@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Document\Reservation;
 use App\Document\Trajet;
 use Doctrine\ODM\MongoDB\DocumentManager;
+use App\Service\ReservationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,10 +14,12 @@ use Symfony\Component\Routing\Attribute\Route;
 class PaymentController extends AbstractController
 {
     private DocumentManager $dm;
+    private ReservationService $reservationService;
 
-    public function __construct(DocumentManager $dm)
+    public function __construct(DocumentManager $dm, ReservationService $reservationService)
     {
         $this->dm = $dm;
+        $this->reservationService = $reservationService;
     }
 
     /**
@@ -46,25 +49,28 @@ class PaymentController extends AbstractController
     #[Route('/payment-page', name: 'app_payment_page', methods: ['GET', 'POST'])]
     public function paymentPage(Request $request): Response
     {
-        $reservationId = $request->query->get('reservationId');
+        $trajetId = $request->query->get('trajetId');
+        $nbPlaces = (int) $request->query->get('nbPlaces', 1);
 
-        if (!$reservationId) {
-            return new Response('Invalid payment session. Missing reservationId.', 400);
+        if (!$trajetId) {
+            return new Response('Invalid payment session. Missing trajetId.', 400);
         }
 
-        $reservation = $this->dm->find(Reservation::class, $reservationId);
+        $trajet = $this->dm->find(Trajet::class, $trajetId);
 
-        if (!$reservation) {
-            return new Response('Reservation not found.', 404);
+        if (!$trajet) {
+            return new Response('Trajet not found.', 404);
         }
 
-        // Si la réservation est déjà payée/confirmée
-        if ($reservation->getStatut() === 'confirmee') {
-            return $this->render('payment/success.html.twig', [
-                'paymentId' => $reservation->getId()
-            ]);
+        if ($trajet->getStatut() !== 'actif') {
+            return new Response("Ce trajet n'est plus actif.", 400);
         }
 
+        if ($trajet->getNbPlacesDisponibles() < $nbPlaces) {
+            return new Response("Plus assez de places disponibles pour ce trajet.", 400);
+        }
+
+        $amount = $trajet->getPrix() * $nbPlaces;
         $error = null;
 
         if ($request->isMethod('POST')) {
@@ -80,17 +86,23 @@ class PaymentController extends AbstractController
             } elseif (empty($name) || empty($expiry)) {
                 $error = 'Veuillez remplir tous les champs.';
             } else {
-                // Paiement réussi, on confirme la réservation
-                $reservation->setStatut('confirmee');
-                $this->dm->flush();
+                try {
+                    // Paiement réussi, on crée et confirme la réservation
+                    $reservation = $this->reservationService->reserver($trajetId, $nbPlaces);
+                    $reservation->setStatut('confirmee');
+                    $this->dm->flush();
 
-                return $this->redirectToRoute('app_payment_success', ['id' => $reservation->getId()]);
+                    return $this->redirectToRoute('app_payment_success', ['id' => $reservation->getId()]);
+                } catch (\Exception $e) {
+                    $error = 'Erreur lors de la réservation : ' . $e->getMessage();
+                }
             }
         }
 
         return $this->render('payment/clictopay.html.twig', [
-            'paymentId' => $reservation->getId(),
-            'amount' => $reservation->getPrixTotal(),
+            'trajetId' => $trajetId,
+            'nbPlaces' => $nbPlaces,
+            'amount' => $amount,
             'currency' => 'TND',
             'error' => $error
         ]);

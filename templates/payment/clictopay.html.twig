@@ -160,7 +160,7 @@
             </div>
         {% endif %}
 
-        <form action="{{ path('app_payment_page', {'reservationId': paymentId}) }}" method="POST">
+        <form action="{{ path('app_payment_page', {'trajetId': trajetId, 'nbPlaces': nbPlaces}) }}" method="POST">
             <div class="form-group">
                 <label for="cardNumber">Numéro de Carte</label>
                 <input type="text" id="cardNumber" name="cardNumber" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19" required>

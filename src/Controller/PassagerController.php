@@ -358,15 +358,20 @@ class PassagerController extends AbstractController
         $nbPlaces = (int) $request->request->get('nbPlaces', 1);
 
         try {
-            $reservation = $this->reservationService->reserver(
-                $trajetId,
-                $nbPlaces
-            );
+            // Check if there are enough places before redirecting to payment
+            $trajet = $this->dm->find(\App\Document\Trajet::class, $trajetId);
+            if (!$trajet || $trajet->getNbPlacesDisponibles() < $nbPlaces) {
+                $this->addFlash('error', 'Pas assez de places disponibles.');
+                return $this->redirectToRoute('passager_reservations');
+            }
 
             // Redirect to the mock ClicToPay API for payment
-            return $this->redirectToRoute('app_payment_page', ['reservationId' => $reservation->getId()]);
+            return $this->redirectToRoute('app_payment_page', [
+                'trajetId' => $trajetId,
+                'nbPlaces' => $nbPlaces
+            ]);
         } catch (\Exception $e) {
-            $this->addFlash('error', 'Erreur lors de la réservation : ' . $e->getMessage());
+            $this->addFlash('error', 'Erreur lors de la redirection au paiement : ' . $e->getMessage());
         }
 
         return $this->redirectToRoute('passager_reservations');
